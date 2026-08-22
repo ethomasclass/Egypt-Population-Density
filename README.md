@@ -12,6 +12,25 @@ five countries. Evidence arrives in four rounds, and each round's new measure ch
 | 3 | Sudan data revision (displacement) | Distribution can be redrawn while density sits still |
 | 4 | Agricultural density, yields, income — and a 40% fund cut | Low agricultural density ≠ mechanised |
 
+## What density has to do with cereal aid
+
+Density is **not** a measure of hunger — Japan is crushingly dense per acre of farmland and nobody
+there is short of food. The lab says so in Briefing 01 and works the whole chain instead:
+
+1. **Physiological density** — people per square mile of farmland.
+2. **Farmland per person** — the same number inverted (640 ÷ density). Egypt: 0.08 acres a head.
+3. **Yield** — farmland per person × yield = cereal grown per person. Physiological density is
+   *literally the denominator* of a country's per-head food supply.
+4. **The gap** — grown against a 150 kg/person/year ration line.
+5. **Ability to pay** — a rich country buys the gap; a poor one cannot.
+
+The payoff is Round 4: **Egypt and Yemen have nearly identical physiological densities
+(8,077 and 6,909) and nearly identical farmland per person (0.08 and 0.09 acres) — and Egypt grows
+208 kg of cereal per person while Yemen grows 37**, because Egyptian yields are among the world's
+highest and Yemen's are 1.0 t/ha. Density found the pressure. It took yield and income to find the
+hunger. Egypt is the largest wheat importer on earth, not a famine — a structural vulnerability,
+and the lab no longer pretends otherwise.
+
 **All three densities are computed by hand** on the Calculation Bench — arithmetic in Round 1
 (a warm-up that teaches the interface while stakes are low), physiological in Round 2, agricultural
 in Round 4. None of them is merely read off a table.

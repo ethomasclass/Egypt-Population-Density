@@ -277,6 +277,24 @@ table.data caption{caption-side:bottom;text-align:left;font-size:11.5px;color:va
 .notespage li{margin-bottom:6px}
 .notespage code{font-family:var(--d-mono);font-size:13px;background:var(--panel-2);padding:1px 4px}
 
+/* ── the chain ──────────────────────────────────────────── */
+.chain{display:flex;flex-direction:column;gap:6px;margin:0 0 14px;max-width:68ch}
+.chain .ch{display:flex;gap:11px;align-items:flex-start;background:var(--panel);
+  border:1px solid var(--rule);padding:9px 12px;font-size:13.5px;line-height:1.5}
+.chain .ch .i{flex:0 0 auto;width:20px;height:20px;background:var(--seal);color:var(--panel);
+  font:600 12px/20px var(--d-mono);text-align:center}
+.chain .ch b{display:block;font-family:var(--d-display);font-weight:600;font-size:12px;
+  letter-spacing:.07em;text-transform:uppercase;margin-bottom:1px}
+/* ── ration bars ────────────────────────────────────────── */
+.rations{display:flex;flex-direction:column;gap:7px;margin:0 0 14px}
+.ration{display:grid;grid-template-columns:104px 1fr 96px;gap:10px;align-items:center}
+.ration .nm{font-size:13.5px;font-weight:500}
+.ration .tr{position:relative;height:22px;background:var(--sunk);border:1px solid var(--rule)}
+.ration .tr i{display:block;height:100%}
+.ration .tr u{position:absolute;top:-3px;bottom:-3px;border-left:2px solid var(--ink);opacity:.75}
+.ration .tr u span{position:absolute;left:4px;top:-15px;font:600 9.5px var(--d-display);
+  letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2);white-space:nowrap}
+.ration .vv{font-family:var(--d-mono);font-size:12px;text-align:right;font-variant-numeric:tabular-nums}
 /* ── maps ───────────────────────────────────────────────── */
 :root{
   --ramp1:#DEE6E8; --ramp2:#B7CBD1; --ramp3:#8BADB7; --ramp4:#568795; --ramp5:#22596A;
@@ -521,7 +539,7 @@ table.data caption{caption-side:bottom;text-align:left;font-size:11.5px;color:va
 const SQMI_PER_SQKM = 0.386102;
 const CANDIDATES = [
   { id:"egypt", name:"Egypt", areaKm2:1001450, pop:87450000, arablePct:2.8,
-    farmers:6100000, gdpPc:3020, yield:3.1,
+    farmers:6100000, gdpPc:3020, yield:6.5,
     pattern:"linear",
     profile:"Population is confined almost entirely to the Nile valley and delta — a ribbon of settlement a few miles wide crossing 700 miles of desert. Wheat is the staple; roughly half of it is imported. Urban expansion around Cairo is consuming delta farmland." },
   { id:"yemen", name:"Yemen", areaKm2:527968, pop:30984689, arablePct:2.2,
@@ -551,12 +569,22 @@ const BENCH = [
   { name:"Iceland",      arith:8,     physio:687,     agri:null, arable:1.2,  gdpPc:54600 },
   { name:"Singapore",    arith:19982, physio:2498197, agri:null, arable:0.8,  gdpPc:65200 }
 ];
+/* Cereal component of a standard emergency ration: ~400 g/day, the basis of
+   the 2,100 kcal/person/day humanitarian planning figure. */
+const RATION_KG = 150;
+const ACRES_PER_SQMI = 640, ACRES_PER_HA = 2.4711;
 CANDIDATES.forEach(c=>{
   c.areaSqMi   = c.areaKm2 * SQMI_PER_SQKM;
   c.arableSqMi = c.areaSqMi * c.arablePct/100;
   c.arith      = c.pop / c.areaSqMi;
   c.physio     = c.pop / c.arableSqMi;
   c.agri       = c.farmers / c.arableSqMi;
+  // The chain from density to calories:
+  //   acres of farmland per person = 640 / physiological density
+  //   cereal grown per person      = acres per person x yield
+  c.acres  = ACRES_PER_SQMI / c.physio;
+  c.food   = c.acres * (c.yield / ACRES_PER_HA) * 1000;   // kg per person per year
+  c.cover  = c.food / RATION_KG;                          // share of a year's ration
 });
 const byId = id => CANDIDATES.find(c=>c.id===id);
 const fmt  = n => Math.round(n).toLocaleString("en-US");
@@ -576,6 +604,9 @@ const MEASURES = {
   physio:{ label:"Physiological density", formula:"population &divide; <em>arable</em> land",
     ex:'Worked example — Bangladesh: <span class="num">167,030,000</span> &divide; <span class="num">33,819</span> = <span class="num">4,939</span>/sq&nbsp;mi.',
     hint:"Arable area is in the survey, in square miles — not total area." },
+  food:{ label:"Cereal grown per person", formula:"farmland per person &times; yield, in kg per person per year", tol:0.06,
+    ex:'Worked example — Sudan: <span class="num">1.51</span> acres &times; <span class="num">0.6</span> t/ha &divide; <span class="num">2.4711</span> &times; 1000 = <span class="num">366</span> kg.',
+    hint:"Convert the yield from tonnes per hectare to tonnes per acre first — divide by 2.4711." },
   agri:{ label:"Agricultural density", formula:"<em>farmers</em> &divide; arable land",
     ex:'Worked example — Egypt: <span class="num">6,100,000</span> farmers &divide; <span class="num">10,827</span> = <span class="num">563</span>/sq&nbsp;mi.',
     hint:"Divide farmers by arable area — not total population, and not total area." }
@@ -583,7 +614,7 @@ const MEASURES = {
 const ROUNDS = {
   1:{ budget:100, title:"Round 1 of 4", step:5,
       gate:"Round 1 opens with distribution and arithmetic density only. Work the bench, allocate the full fund, then lock.",
-      docs:["brief01","map"], open:"brief01", anchor:"map", bench:{m:"arith",ids:["egypt","sudan"]},
+      docs:["brief01","map"], open:"brief01", anchor:"map", bench:{rows:[{id:"egypt",m:"arith"},{id:"sudan",m:"arith"}]},
       checks:[
         "Rank the five candidates by arithmetic density. Which looks most urgent? Which looks least?",
         "Look at the settlement patterns. Two candidates have the same arithmetic density story but completely different distributions — find them."
@@ -591,7 +622,7 @@ const ROUNDS = {
       ask:"Before you see any other evidence: which candidate are you funding most heavily, and what is your reason?" },
   2:{ budget:100, title:"Round 2 of 4", step:5,
       gate:"The arable land survey has arrived. Work the physiological densities on the bench, then revise.",
-      docs:["brief01","map","arable","bench","lens"], open:"arable", anchor:"arable", bench:{m:"physio",ids:["egypt","yemen","niger"]},
+      docs:["brief01","map","arable","bench","lens"], open:"arable", anchor:"arable", bench:{rows:[{id:"egypt",m:"physio"},{id:"yemen",m:"physio"},{id:"niger",m:"physio"}]},
       checks:[
         "Which candidate's ranking moved the most between Round 1 and Round 2? Nothing about the country changed — so what did?",
         {pair:"Japan's physiological density is 8,218 — higher than Egypt's 8,078 — and Japan is not a candidate. Settle between you why not.",
@@ -607,14 +638,15 @@ const ROUNDS = {
       ],
       ask:"Sudan's densities look unremarkable next to Egypt's. Argue for or against funding Sudan anyway." },
   4:{ budget:45, title:"Final Round", step:5,
-      gate:"Fund reduced. Round 1 disbursements are already out the door and cannot be recalled. Work the bench before you cut.",
-      docs:["brief01","map","arable","bench","lens","revision","annex","cut"], open:"annex", anchor:"cut", bench:{m:"agri",ids:["niger","bangladesh"]},
+      gate:"Steps 3 to 5 released, and the fund is cut. Work the bench, then decide who actually needs cereal.",
+      docs:["brief01","map","arable","bench","lens","revision","annex","balance","cut"], open:"balance", anchor:"cut", bench:{rows:[{id:"niger",m:"agri"},{id:"bangladesh",m:"agri"},{id:"yemen",m:"food"}]},
       checks:[
+        "Egypt and Yemen have almost the same physiological density and almost the same farmland per person. One grows 208 kg of cereal per head, the other 37. Say what makes the difference — and what that means for which of them needs cereal.",
         "Niger's agricultural density is far lower than Bangladesh's. Does that mean Niger's farmers are better equipped? Check the yield column before you answer.",
         {pair:"You cannot fund everyone now. Say out loud which candidate you are cutting, and be able to defend it.",
          solo:"You cannot fund everyone now. Name the candidate you are cutting, and be able to defend it."}
       ],
-      ask:"Final recommendation. Cite at least two different density measures, and name what you gave up." }
+      ask:"Final recommendation. Name the step of the chain that decided it, cite at least one density measure by name, and say what you gave up." }
 };
 
 /* ═══ MAPS ════════════════════════════════════════════════
@@ -733,20 +765,6 @@ signin.addEventListener("click",()=>{
 });
 
 /* ═══ DOCUMENTS ═══════════════════════════════════════════ */
-function dots(pattern){
-  const pts=[];
-  const R=(s)=>{let x=Math.sin(s*127.1)*43758.5;return x-Math.floor(x);};
-  for(let i=0;i<46;i++){
-    let x,y;
-    if(pattern==="linear"){ const t=i/45; x=14+t*72+ (R(i)*8-4); y=8+t*76+(R(i+90)*10-5); }
-    else if(pattern==="clustered"){
-      if(i<34){ x=52+(R(i)-0.5)*30; y=62+(R(i+40)-0.5)*26; }
-      else { x=8+R(i+7)*84; y=6+R(i+70)*80; }
-    } else { x=6+R(i)*88; y=6+R(i+55)*80; }
-    pts.push([Math.max(3,Math.min(97,x)),Math.max(4,Math.min(94,y))]);
-  }
-  return pts.map(p=>'<circle cx="'+p[0].toFixed(1)+'" cy="'+p[1].toFixed(1)+'" r="2.1" fill="var(--seal)" opacity=".85"/>').join("");
-}
 const PATNAME={linear:"Linear",clustered:"Clustered",even:"Dispersed"};
 
 const DOCS = {
@@ -774,7 +792,24 @@ const DOCS = {
         'Figures reproduce the densities published in your reading.</caption></table></div>'+
         '<div class="note"><strong>Reminder.</strong> Arithmetic density is an average across the whole '+
         'territory. It reports how many people there are per square mile — not where in that territory '+
-        'any of them actually live.</div>';
+        'any of them actually live.</div>'+
+        '<h2>Why this desk measures density at all</h2>'+
+        '<p>A fair question, and you should ask it before you move a single dollar: '+
+        '<strong>density is not a measure of hunger.</strong> Japan is one of the most crowded '+
+        'countries on earth per acre of farmland and nobody there is short of food.</p>'+
+        '<p>Density is the <em>first</em> step in a chain, and this desk works the whole chain:</p>'+
+        '<div class="chain">'+
+        [["1","Physiological density","How many people depend on each square mile of farmland."],
+         ["2","Farmland per person","The same number turned upside down. Egypt has fractions of an acre per person."],
+         ["3","Yield","What that land actually produces. Land per person &times; yield = food per person."],
+         ["4","The gap","Food grown against food needed. A country short of the line must buy the difference."],
+         ["5","Ability to pay","A rich country buys its way out. A poor one cannot. That is where need begins."]]
+         .map(r=>'<div class="ch"><span class="i">'+r[0]+'</span><span><b>'+r[1]+'</b>'+r[2]+'</span></div>').join("")+
+        '</div>'+
+        '<div class="note"><strong>So density does not tell you who is hungry.</strong> It tells you '+
+        'how much pressure sits on a country\'s own land, which is where the chain starts. Steps 3, 4 '+
+        'and 5 are released in later rounds. Do not skip to the end — the point of this case is that '+
+        'each step changes the answer.</div>';
     }
   },
   map:{
@@ -825,7 +860,8 @@ const DOCS = {
         '<strong>physiological density</strong>.</p>'+
         '<div class="tablewrap"><table class="data"><thead><tr>'+
         '<th>Country</th><th>Arable<br>land</th><th>Arable area<br>(sq. mi.)</th>'+
-        '<th>Arithmetic<br>density</th><th>Physiological<br>density</th><th>Change in<br>rank</th>'+
+        '<th>Arithmetic<br>density</th><th>Physiological<br>density</th>'+
+        '<th>Farmland per<br>person (acres)</th><th>Change in<br>rank</th>'+
         '</tr></thead><tbody>'+
         s.map(c=>{
           const r1=CANDIDATES.slice().sort((a,b)=>b.arith-a.arith).findIndex(x=>x.id===c.id)+1;
@@ -834,7 +870,8 @@ const DOCS = {
           const col = d>0?'var(--critical)':d<0?'var(--stable)':'var(--ink-3)';
           return '<tr'+(c.id==="egypt"?' class="hi"':'')+'><td>'+c.name+'</td><td class="n">'+
             c.arablePct.toFixed(1)+'%</td><td class="n">'+fmt(c.arableSqMi)+'</td><td class="n">'+
-            fmt(c.arith)+'</td><td class="n">'+fmt(c.physio)+'</td>'+
+            fmt(c.arith)+'</td><td class="n">'+fmt(c.physio)+'</td><td class="n">'+
+            c.acres.toFixed(2)+'</td>'+
             '<td class="n" style="color:'+col+'">'+arrow+'</td></tr>';
         }).join("")+
         '</tbody><caption>Physiological density = total population ÷ arable land. '+
@@ -845,8 +882,18 @@ const DOCS = {
         '<span class="num">'+fmt(byId("egypt").physio)+'</span> per square mile — the most crowded '+
         'country in this case by a wide margin. Nothing about Egypt changed between Round 1 and now. '+
         'Only the denominator did.</div>'+
+        '<div class="note"><strong>Farmland per person is the same number upside down.</strong> '+
+        'Egypt\'s <span class="num">'+fmt(byId("egypt").physio)+'</span> people per square mile of '+
+        'farmland means <span class="num">'+byId("egypt").acres.toFixed(2)+'</span> acres each — '+
+        'about a tennis court. Sudan has <span class="num">'+byId("sudan").acres.toFixed(2)+
+        '</span> acres per person, roughly a football pitch.</div>'+
         '<div class="note"><strong>And note what did not happen.</strong> Sudan and Niger barely moved. '+
-        'Physiological density found Egypt and Yemen; it did not find them. Hold that thought.</div>';
+        'Physiological density found Egypt and Yemen; it did not find them.</div>'+
+        '<div class="note crit"><strong>What this does not tell you.</strong> Pressure on the land is '+
+        'not the same as hunger. Egypt and Yemen now sit within '+
+        '<span class="num">'+fmt(byId("egypt").physio-byId("yemen").physio)+'</span> of each other on '+
+        'this measure. Whether that means the same thing in both countries depends on what their land '+
+        'produces — <strong>step 3 of the chain, and this desk does not have it yet.</strong></div>';
     }
   },
   bench:{
@@ -896,6 +943,60 @@ const DOCS = {
         (S.round>=4?'<div class="note"><strong>On agricultural density</strong> the ranking scrambles '+
           'again, and this time the dark countries are not the ones in trouble. Check the Economic '+
           'Annex before you read anything into it.</div>':'');
+    }
+  },
+  balance:{
+    title:"Food Balance — Land, Yield and the Gap", from:"Food Security Analysis", time:"11:05",
+    tag:["crit","Step 3-5"], time2:null,
+    body(){
+      const s=CANDIDATES.slice().sort((a,b)=>a.cover-b.cover);
+      const max=Math.max.apply(null,CANDIDATES.map(c=>c.cover));
+      return '<p>Steps 3 to 5 of the chain. Farmland per person is only half the story — what '+
+        'matters is what that land <em>produces</em>, and whether the country can buy whatever it '+
+        'falls short of.</p>'+
+        '<div class="note"><strong>The whole chain in one line:</strong><br>'+
+        '<span class="num">farmland per person &times; yield = cereal grown per person</span><br>'+
+        'and farmland per person is just <span class="num">640 &divide; physiological density</span>. '+
+        'Physiological density is literally the denominator of a country\'s food supply.</div>'+
+        '<div class="tablewrap"><table class="data"><thead><tr>'+
+        '<th>Country</th><th>Physiological<br>density</th><th>Farmland/person<br>(acres)</th>'+
+        '<th>Cereal yield<br>(t / hectare)</th><th>Cereal grown<br>(kg / person / yr)</th>'+
+        '<th>GDP per<br>capita (USD)</th></tr></thead><tbody>'+
+        s.map(c=>'<tr'+(c.cover<1?' class="hi"':'')+'><td>'+c.name+'</td><td class="n">'+
+          fmt(c.physio)+'</td><td class="n">'+c.acres.toFixed(2)+'</td><td class="n">'+
+          c.yield.toFixed(1)+'</td><td class="n">'+fmt(c.food)+'</td><td class="n">'+
+          fmt(c.gdpPc)+'</td></tr>').join("")+
+        '</tbody><caption>Yields are national cereal averages. Egypt\'s are among the highest in '+
+        'the world — the Nile valley is irrigated and double-cropped.</caption></table></div>'+
+        '<h2>Against a year of rations</h2>'+
+        '<p>The line is <span class="num">'+RATION_KG+' kg</span> of cereal per person per year — '+
+        'roughly 400 grams a day, the cereal component of a standard emergency ration and the basis '+
+        'of the 2,100 kcal per day humanitarian planning figure.</p>'+
+        '<div class="rations">'+s.map(c=>{
+          const w=Math.min(100,c.cover/max*100), line=1/max*100;
+          const col=c.cover<1?"var(--critical)":c.cover<1.5?"var(--watch)":"var(--stable)";
+          return '<div class="ration"><span class="nm">'+c.name+'</span>'+
+            '<span class="tr"><i style="width:'+w.toFixed(1)+'%;background:'+col+'"></i>'+
+            '<u style="left:'+line.toFixed(1)+'%">'+(c===s[0]?'<span>ration line</span>':'')+'</u></span>'+
+            '<span class="vv">'+fmt(c.food)+' kg &middot; '+Math.round(c.cover*100)+'%</span></div>';
+        }).join("")+'</div>'+
+        '<div class="note crit"><strong>Read Egypt and Yemen together.</strong> Their physiological '+
+        'densities are '+fmt(byId("egypt").physio)+' and '+fmt(byId("yemen").physio)+' — nearly the '+
+        'same. Their farmland per person is '+byId("egypt").acres.toFixed(2)+' and '+
+        byId("yemen").acres.toFixed(2)+' acres — nearly the same. And they grow '+
+        '<span class="num">'+fmt(byId("egypt").food)+' kg</span> and '+
+        '<span class="num">'+fmt(byId("yemen").food)+' kg</span> per person. '+
+        'Egypt farms its sliver of land at close to the highest yields on earth. Yemen does not. '+
+        'The density was identical; the outcome is not.</div>'+
+        '<div class="note"><strong>And Sudan grows the most of anyone here.</strong> '+
+        '<span class="num">'+fmt(byId("sudan").food)+' kg</span> per person, well clear of the line — '+
+        'while its people are displaced away from the fields that grew it. Production is not access. '+
+        'Round 3 said the same thing about density; it is true of this table too.</div>'+
+        '<div class="note"><strong>Step 5.</strong> Egypt is short of nothing on this table, and is '+
+        'still the largest wheat importer on earth, because its people eat far more than a bare '+
+        'ration and its own land cannot stretch further. It buys the difference — at '+
+        '$'+fmt(byId("egypt").gdpPc)+' per head, with difficulty. Yemen, at $'+
+        fmt(byId("yemen").gdpPc)+', cannot buy anything at all.</div>';
     }
   },
   revision:{
@@ -1000,7 +1101,7 @@ const DOCS = {
     }
   }
 };
-const DOC_ORDER=["brief01","map","arable","bench","lens","revision","annex","cut"];
+const DOC_ORDER=["brief01","map","arable","bench","lens","revision","annex","balance","cut"];
 
 /* ═══ RENDER ══════════════════════════════════════════════ */
 function availableDocs(){ return ROUNDS[S.round].docs; }
@@ -1068,7 +1169,6 @@ function wireDelib(){
 /* ── calculation bench ── */
 function renderBench(){
   const spec=ROUNDS[S.round].bench, box=document.getElementById("bench");
-  const ids=spec&&spec.ids;
   if(!spec){
     box.hidden=true; S.benchOk=true;
     document.querySelector("#bench h3").textContent="Calculation Bench";
@@ -1077,18 +1177,23 @@ function renderBench(){
     return;
   }
   box.hidden=false; S.benchOk=false;
-  const M=MEASURES[spec.m];
-  document.querySelector("#bench h3").textContent=M.label;
-  document.getElementById("benchwhy").innerHTML =
-    M.formula+", to the nearest whole number. The round cannot be locked until every "+
-    "entry is verified.<br><span style=\"color:var(--ink-3)\">"+M.ex+"</span>";
+  const kinds=[]; spec.rows.forEach(r=>{ if(kinds.indexOf(r.m)<0) kinds.push(r.m); });
+  const mixed = kinds.length>1;
+  document.querySelector("#bench h3").textContent = mixed ? "Calculation Bench" : MEASURES[kinds[0]].label;
+  document.getElementById("benchwhy").innerHTML = mixed
+    ? kinds.map(k=>'<b>'+MEASURES[k].label+'</b> &mdash; '+MEASURES[k].formula).join("<br>")+
+      '<br><span style="color:var(--ink-3)">'+MEASURES[kinds[kinds.length-1]].ex+'</span>'
+    : MEASURES[kinds[0]].formula+", to the nearest whole number. The round cannot be locked until "+
+      "every entry is verified.<br><span style=\"color:var(--ink-3)\">"+MEASURES[kinds[0]].ex+"</span>";
   const rows=document.getElementById("benchrows"); rows.innerHTML="";
-  ids.forEach(id=>{
-    const c=byId(id);
+  spec.rows.forEach(r=>{
+    const c=byId(r.id), M=MEASURES[r.m];
     const row=document.createElement("div"); row.className="benchrow";
-    row.innerHTML='<span>'+c.name+'</span><input type="text" inputmode="numeric" '+
-      'aria-label="Physiological density for '+c.name+'" data-id="'+id+'">'+
-      '<span class="mark" data-mark="'+id+'"></span>';
+    row.innerHTML='<span>'+c.name+(mixed?'<br><span style="font-size:10.5px;color:var(--ink-3)">'+
+      (r.m==="food"?"kg/person":"agri. density")+'</span>':'')+
+      '</span><input type="text" inputmode="numeric" '+
+      'aria-label="'+M.label+' for '+c.name+'" data-id="'+r.id+'">'+
+      '<span class="mark" data-mark="'+r.id+'"></span>';
     rows.appendChild(row);
   });
   rows.querySelectorAll("input").forEach(inp=>inp.addEventListener("input",checkBench));
@@ -1096,21 +1201,22 @@ function renderBench(){
 }
 function checkBench(){
   const spec=ROUNDS[S.round].bench; if(!spec) return;
-  const ids=spec.ids;
-  let allOk=true, anyTyped=false, near=false;
-  ids.forEach(id=>{
+  let allOk=true, anyTyped=false, near=false, badKind=null;
+  spec.rows.forEach(r=>{
+    const id=r.id;
     const inp=document.querySelector('#benchrows input[data-id="'+id+'"]');
     const mark=document.querySelector('[data-mark="'+id+'"]');
-    const target=byId(id)[spec.m];
+    const target=byId(id)[r.m];
+    const tol=MEASURES[r.m].tol||0.03;
     const v=parseFloat(inp.value.replace(/[, ]/g,""));
     inp.classList.remove("ok","no"); mark.textContent="";
     if(!inp.value.trim()){ allOk=false; return; }
     anyTyped=true;
-    if(isFinite(v) && Math.abs(v-target)/target <= 0.03){
+    if(isFinite(v) && Math.abs(v-target)/target <= tol){
       inp.classList.add("ok"); mark.textContent="✓"; mark.style.color="var(--stable)";
     } else {
       inp.classList.add("no"); mark.textContent="✗"; mark.style.color="var(--critical)";
-      allOk=false;
+      allOk=false; badKind=badKind||r.m;
       if(isFinite(v) && Math.abs(v-target)/target<=0.35) near=true;
     }
   });
@@ -1118,7 +1224,7 @@ function checkBench(){
   const msg=document.getElementById("benchmsg");
   msg.textContent = allOk ? "Verified and recorded on the case file."
     : near ? "Close. Check which two figures you divided."
-    : anyTyped ? "Check your arithmetic — "+MEASURES[spec.m].hint
+    : anyTyped ? "Check your arithmetic — "+MEASURES[badKind||spec.rows[0].m].hint
     : "";
   if(allOk && !availableDocs().includes("arable")){}
   renderRail(); updateGate();
@@ -1257,10 +1363,14 @@ function pearson(a,b){
   return (da===0||db===0) ? null : num/Math.sqrt(da*db);
 }
 const MEASURE_KEYS=[["arith","Arithmetic"],["physio","Physiological"],["agri","Agricultural"]];
-function trackReport(alloc){
+function trackReport(alloc,round){
   const money=CANDIDATES.map(c=>alloc[c.id]);
-  const rows=MEASURE_KEYS.map(([k,label])=>{
-    const rho=pearson(ranks(money),ranks(CANDIDATES.map(c=>c[k])));
+  const keys=MEASURE_KEYS.slice();
+  // Cereal shortfall only becomes visible once the Food Balance is released.
+  if((round||4)>=4) keys.push(["food","Cereal shortfall"]);
+  const rows=keys.map(([k,label])=>{
+    const vals=CANDIDATES.map(c=> k==="food" ? -c.food : c[k]);
+    const rho=pearson(ranks(money),ranks(vals));
     return {k,label,rho};
   });
   const flat = rows.every(r=>r.rho===null);
@@ -1275,16 +1385,16 @@ function strengthWord(rho){
   return "inversely";
 }
 function showReceipt(round,alloc,then){
-  const t=trackReport(alloc);
+  const t=trackReport(alloc,round);
   const card=document.getElementById("receiptcard");
   const head = t.flat
     ? 'You spread the fund evenly across all five. That is a decision not to rank them — '+
       'no measure on file tracks it.'
     : (t.best.rho>=0.3
-        ? 'Your money followed <b>'+t.best.label.toLowerCase()+' density</b> more closely than '+
-          'any other measure on file.'
-        : 'Your money did not follow any density measure on file closely. That may be deliberate — '+
-          'it should be defensible.');
+        ? 'Your money followed <b>'+(t.best.k==="food"?"cereal shortfall":
+            t.best.label.toLowerCase()+" density")+'</b> more closely than anything else on file.'
+        : 'Your money did not track any single measure on file. That is what a recommendation '+
+          'built from more than one of them looks like — it should be defensible.');
   card.innerHTML=
     '<div class="k">GLOBAL FOOD SECURITY UNIT &middot; CASE 2.1-EGY</div>'+
     '<h3>Allocation recorded</h3>'+
@@ -1295,6 +1405,9 @@ function showReceipt(round,alloc,then){
         '<span class="track"><i style="width:'+w.toFixed(0)+'%"></i></span>'+
         '<span class="w">'+strengthWord(r.rho)+'</span></div>';
     }).join("")+
+    (round>=4?'<p style="font-size:11.5px;color:var(--ink-3);margin:12px 0 0;line-height:1.45">'+
+      'Cereal shortfall ranks the five by how little they grow per person — the closest thing on '+
+      'this desk to a measure of who is actually short of food.</p>':'')+
     '<div class="foot"><span class="note">This is a description of your allocation, not a mark. '+
     'It is recorded on your recommendation.</span>'+
     '<button class="btn" id="receiptGo">'+(round===4?"Continue":"Round "+(round+1))+'</button></div>';
@@ -1313,19 +1426,25 @@ function showAftermath(then){
     '<p class="lead">Your recommendation is filed. Here is what is true of these five countries, '+
     'outside the exercise.</p>'+
     '<ul class="rules">'+
-    '<li><b>Egypt is the largest wheat importer on earth.</b> It buys more wheat from abroad than '+
-    'any other country — recent seasons run around 12–13 million tonnes imported against a domestic '+
-    'crop target near 10 million. Its physiological density is not a statistic about Egypt. It is '+
-    'the reason for that import bill.</li>'+
-    '<li><b>Yemen and Sudan are not density problems.</b> Yemen has spent years under famine-risk '+
-    'classification; Sudan is the largest displacement crisis currently recorded anywhere. Neither '+
-    'shows up in a national density figure, which is exactly what Round 3 was about.</li>'+
+    '<li><b>The country with the most alarming density was not the country in the most trouble.</b> '+
+    'Egypt and Yemen sit within a few hundred of each other on physiological density and have almost '+
+    'identical farmland per person. Egypt grows 208 kg of cereal a head; Yemen grows 37. Density '+
+    'measured the pressure on the land. It could not tell you who was hungry — that took yield, and '+
+    'then income.</li>'+
+    '<li><b>Egypt is the largest wheat importer on earth</b> — recent seasons run around 12&ndash;13 '+
+    'million tonnes imported. Not because Egyptians farm badly: Egyptian cereal yields are among the '+
+    'highest in the world, because the Nile valley is irrigated and double-cropped. It imports '+
+    'because there is so little valley. That is what a physiological density of 8,000 actually buys '+
+    'you — not famine, but total dependence on a river and a world market.</li>'+
+    '<li><b>Sudan grows more cereal per person than anyone else in this case</b> and is the largest '+
+    'displacement crisis currently recorded anywhere. Grain in a field nobody can safely reach is '+
+    'not food. No density on this desk, and no yield figure either, can see that.</li>'+
     '<li><b>Niger farms at roughly a twentieth of Dutch yields.</b> Its low agricultural density '+
     'never meant mechanisation. It meant a great deal of marginal land and very few people on it.</li>'+
     '<li><b>Your fund was cut by 40%. The real cut is worse.</b> In 2024 the UN and its partners '+
-    'appealed for about $50 billion and received roughly 43% of it. Halfway through 2025, under '+
-    '17% of the year\'s appeal had come in. Being handed less money than the need is not a twist '+
-    'in this exercise. It is the ordinary condition of the job.</li>'+
+    'appealed for about $50 billion and received roughly 43% of it. Halfway through 2025, under 17% '+
+    'of the year\'s appeal had come in. Being handed less money than the need is not a twist in this '+
+    'exercise. It is the ordinary condition of the job.</li>'+
     '</ul>'+
     '<p style="margin-top:20px;color:var(--ink-2);font-size:13.5px">Sources: USDA and trade '+
     'reporting on Egyptian wheat imports; IPC famine-risk classifications for Yemen; UN '+
@@ -1372,9 +1491,9 @@ function showMemo(){
     'Only the evidence available to this desk changed.</caption></table></div>'+
     '<h2>What your allocation followed</h2>'+
     '<div class="mirror">'+S.history.map(h=>{
-      const t=trackReport(h.alloc);
+      const t=trackReport(h.alloc,h.round);
       return '<div class="m"><div class="r">ROUND '+h.round+'</div><div class="v">'+
-        (t.flat?"Spread evenly":(t.best.rho>=0.3?t.best.label:"No clear measure"))+'</div></div>';
+        (t.flat?"Spread evenly":(t.best.rho>=0.3?t.best.label:"More than one"))+'</div></div>';
     }).join("")+'</div>'+
     '<p style="font-size:13.5px;color:var(--ink-2);max-width:66ch;margin:0 0 8px">'+
     'Each round, the density measure your money tracked most closely. Nothing about the five '+
@@ -1609,14 +1728,45 @@ Density measures need, not capacity to meet it.</li>
 <li><strong>Round 3.</strong> Sudan's national densities do not move, because national totals did not
 move — 11 million people were redistributed <em>inside</em> the total. Density is an average over a
 territory and cannot see a redistribution within it. This is the p.58 A/B/C diagram, live.</li>
-<li><strong>Round 4 — the deliberate trap.</strong> Sorted by agricultural density, Sudan (~46) and
-Niger (~85) sit nearer the Netherlands (31) than Bangladesh (431). Students who learned
-"low agricultural density = mechanised and developed" will read this backwards. The resolution is
-the yield column: Netherlands 8.9 t/ha, Niger 0.5. Low agricultural density here means marginal land
-and few people, not tractors. Expect this to be the argument of the period — let it run.</li>
+<li><strong>Round 4 — the resolution, and the point of the whole lab.</strong> The Food Balance
+completes the chain: farmland per person &times; yield = cereal grown per person, against a 150 kg
+ration line. Egypt 208 kg (139% of the line), Yemen 37 kg (25%), Bangladesh 246, Niger 285,
+Sudan 366. <strong>Egypt and Yemen have nearly identical physiological densities and opposite food
+situations</strong>, because Egyptian yields are among the world's highest and Yemeni yields are
+1.0 t/ha. The sentence to listen for: <em>density told us where the pressure was, not who was
+hungry.</em></li>
+<li><strong>Round 4 — the agricultural density trap.</strong> Sorted by agricultural density, Sudan
+(~46) and Niger (~85) sit nearer the Netherlands (31) than Bangladesh (431). Students who learned
+"low agricultural density = mechanised and developed" will read this backwards. The yield column
+resolves it: Netherlands 8.9 t/ha, Niger 0.5. Expect this to be the argument of the period.</li>
 </ul>
 
+<h2>What density has to do with cereal aid — the chain</h2>
+<p>This is the question a sharp student will ask in the first five minutes, and the lab answers it
+explicitly in Briefing 01 rather than assuming it. <strong>Density is not a measure of hunger.</strong>
+It is step one of five:</p>
+<ol>
+<li><strong>Physiological density</strong> — people per square mile of farmland.</li>
+<li><strong>Farmland per person</strong> — the same number inverted: 640 &divide; physiological
+density, in acres. Egypt: 0.08 acres a head, about a tennis court.</li>
+<li><strong>Yield</strong> — what that land produces. Farmland per person &times; yield = cereal
+grown per person. Physiological density is <em>literally the denominator</em> of a country's
+per-head food supply, which is the mathematical link students should leave with.</li>
+<li><strong>The gap</strong> — grown against needed, on a 150 kg/person/year ration line.</li>
+<li><strong>Ability to pay</strong> — a rich country buys the gap; a poor one cannot.</li>
+</ol>
+<p>Steps 1&ndash;2 land in Round 2, steps 3&ndash;5 in Round 4. The design consequence is important:
+<strong>Egypt is not the right answer to an emergency cereal fund</strong>, and the lab no longer
+pretends it is. Egypt is structurally exposed — the largest wheat importer on earth. Yemen and
+Sudan are the acute emergencies. A pair that funds Egypt heavily in Round 4 has misread step 3, and
+their memo will show it.</p>
+
 <h2>Data note — please read before class</h2>
+<p>Cereal yields are national averages (Egypt 6.5 t/ha, Bangladesh 4.7, Yemen 1.0, Sudan 0.6,
+Niger 0.5). Egypt's is genuinely among the world's highest — irrigated, double-cropped Nile valley —
+and that fact is load-bearing for the whole Round 4 resolution, so it is worth stating aloud.
+The 150 kg/person/year line is the cereal component of a standard emergency ration, roughly 400 g a
+day, behind the 2,100 kcal/day humanitarian planning figure.</p>
 <p>Figures are CIA World Factbook-era (2018–2022), chosen so Egypt and Bangladesh reproduce the
 densities printed in the AMSCO table. Egypt computes to 8,077/sq. mi. against the book's published
 8,078 — rounding in the source. The Calculation Bench accepts ±3% so this never blocks a pair.</p>
