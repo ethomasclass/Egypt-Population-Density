@@ -15,6 +15,17 @@ five countries. Evidence arrives in four rounds, and each round's new measure ch
 Pairs print a signed recommendation memo carrying both names, all four allocations, the density
 figures they computed, and four written justifications — the gradeable artifact.
 
+## Solo or paired
+
+The sign-in screen offers **With a partner** (default) or **On my own**. Solo mode drops the second
+name field, reworks the prompts that assume someone to argue with, and prints a single signature line.
+
+## Orientation
+
+No teacher preamble needed. Students get an in-fiction assignment screen after sign-in, four
+skippable coachmarks on Round 1, and a worked example inside the Calculation Bench at the moment
+it first appears. The `?` in the top bar reopens the assignment at any time. Budget ~3 minutes.
+
 ## Running it
 
 Open `index.html` in any browser. No install, no build, no network required (web fonts degrade to

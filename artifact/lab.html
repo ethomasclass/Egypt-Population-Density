@@ -277,6 +277,60 @@ table.data caption{caption-side:bottom;text-align:left;font-size:11.5px;color:va
 .notespage li{margin-bottom:6px}
 .notespage code{font-family:var(--d-mono);font-size:13px;background:var(--panel-2);padding:1px 4px}
 
+/* ── logo ───────────────────────────────────────────────── */
+.logo{display:block;flex:0 0 auto}
+.seal-svg text{font-family:var(--d-display);font-weight:600}
+.topbar .brand{display:flex;align-items:center;gap:9px}
+.helpbtn{
+  background:none;border:1px solid currentColor;color:inherit;width:22px;height:22px;
+  border-radius:50%;font:600 12px var(--d-display);line-height:1;padding:0;flex:0 0 auto
+}
+/* ── mode picker ────────────────────────────────────────── */
+.modepick{display:flex;gap:0;margin:0 0 16px;border:1px solid var(--rule-2);width:fit-content}
+.modebtn{
+  background:var(--ground);border:0;padding:8px 16px;font-family:var(--d-display);font-weight:600;
+  font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2)
+}
+.modebtn+.modebtn{border-left:1px solid var(--rule-2)}
+.modebtn.on{background:var(--seal);color:var(--panel)}
+.fields.solo{grid-template-columns:1fr}
+.fields.solo .f2{display:none}
+/* ── orientation ────────────────────────────────────────── */
+#orient{position:fixed;inset:0;z-index:65;background:var(--sunk);display:none;
+  overflow-y:auto;padding:24px}
+#orient.on{display:block}
+.orientwrap{max-width:660px;margin:0 auto}
+.orienthead{display:flex;gap:18px;align-items:center;color:var(--seal);
+  border-bottom:2px solid var(--ink);padding-bottom:14px;margin-bottom:18px}
+.orienthead h1{font-family:var(--d-display);font-weight:700;font-size:24px;letter-spacing:.03em;
+  text-transform:uppercase;margin:0;color:var(--ink);line-height:1.15}
+.orienthead .k{font-family:var(--d-mono);font-size:12px;color:var(--ink-2);margin-top:3px}
+#orient p{font-size:15px;line-height:1.6;max-width:64ch;margin:0 0 13px}
+#orient .lead{font-size:16.5px}
+.rules{list-style:none;padding:0;margin:20px 0 4px;counter-reset:r}
+.rules li{
+  counter-increment:r;background:var(--panel);border:1px solid var(--rule);
+  padding:12px 14px 12px 46px;position:relative;margin-bottom:8px;font-size:14.5px;line-height:1.5
+}
+.rules li::before{
+  content:counter(r);position:absolute;left:14px;top:11px;width:20px;height:20px;
+  background:var(--seal);color:var(--panel);font:600 12px/20px var(--d-mono);text-align:center
+}
+.rules li b{font-weight:600}
+/* ── coachmarks ─────────────────────────────────────────── */
+.coach-hole{position:fixed;z-index:91;border:2px solid var(--seal);pointer-events:none;
+  transition:left .22s ease,top .22s ease,width .22s ease,height .22s ease}
+/* Four panels rather than one huge box-shadow spread: Chromium drops
+   shadows past a certain spread, and this is exact at any viewport. */
+.coach-dim{position:fixed;z-index:90;background:rgba(8,12,14,.62);pointer-events:none}
+.coach-tip{position:fixed;z-index:92;width:272px;background:var(--panel);
+  border:1px solid var(--rule-2);border-top:3px solid var(--seal);padding:13px 15px 14px;
+  box-shadow:0 6px 22px rgba(0,0,0,.35)}
+.coach-tip h4{font-family:var(--d-display);font-weight:600;font-size:12px;letter-spacing:.1em;
+  text-transform:uppercase;margin:0 0 6px;color:var(--seal)}
+.coach-tip p{margin:0 0 11px;font-size:13.5px;line-height:1.5}
+.coach-tip .row{display:flex;align-items:center;gap:10px}
+.coach-tip .step{font-family:var(--d-mono);font-size:11px;color:var(--ink-3);flex:1}
 @media (prefers-reduced-motion:reduce){
   *{animation-duration:.01ms!important;transition-duration:.01ms!important}
 }
@@ -296,17 +350,24 @@ table.data caption{caption-side:bottom;text-align:left;font-size:11.5px;color:va
 <!-- ══ LOGIN ══════════════════════════════════════════════ -->
 <div id="login">
   <div class="boot">
-    <div class="seal">Global Food Security Unit</div>
-    <div class="sub">SecureDesk&nbsp;·&nbsp;v4.1</div>
+    <div style="display:flex;gap:16px;align-items:center;margin-bottom:24px;color:var(--seal)">
+      <span id="loginLogo"></span>
+      <span><span class="seal">Global Food Security Unit</span>
+      <span class="sub" style="display:block;margin:0">SecureDesk&nbsp;·&nbsp;v4.1</span></span>
+    </div>
     <ul id="bootlines"></ul>
     <div class="card" id="loginCard" style="opacity:0">
       <h2>Analyst Sign-In</h2>
-      <p class="hint">This workstation is assigned to a two-analyst desk. Both names are
-        recorded on any recommendation issued from this terminal.</p>
-      <div class="fields">
+      <p class="hint">Names entered here are recorded on any recommendation issued from
+        this terminal.</p>
+      <div class="modepick" role="group" aria-label="Working mode">
+        <button type="button" class="modebtn on" data-mode="pair">With a partner</button>
+        <button type="button" class="modebtn" data-mode="solo">On my own</button>
+      </div>
+      <div class="fields" id="fields">
         <label class="f"><span class="lbl">Analyst 1</span>
           <input type="text" id="n1" placeholder="Family name, given name" autocomplete="off"></label>
-        <label class="f"><span class="lbl">Analyst 2</span>
+        <label class="f f2"><span class="lbl">Analyst 2</span>
           <input type="text" id="n2" placeholder="Family name, given name" autocomplete="off"></label>
       </div>
       <button class="btn" id="signin" disabled>Open Case File</button>
@@ -318,10 +379,13 @@ table.data caption{caption-side:bottom;text-align:left;font-size:11.5px;color:va
 <!-- ══ APP ════════════════════════════════════════════════ -->
 <div id="app">
   <header class="topbar">
-    <div class="org">Global Food Security Unit</div>
+    <div class="brand"><span id="barLogo"></span>
+      <span class="org">Global Food Security Unit</span></div>
     <div class="meta" id="caseline">CASE 2.1-EGY</div>
     <div class="spacer"></div>
     <div class="meta" id="deskline"></div>
+    <button class="helpbtn" id="helpBtn" title="Re-read the assignment"
+      aria-label="Re-read the assignment">?</button>
     <div class="roundchip" id="roundchip">Round 1 of 4</div>
   </header>
 
@@ -363,6 +427,9 @@ table.data caption{caption-side:bottom;text-align:left;font-size:11.5px;color:va
     </aside>
   </div>
 </div>
+
+<!-- ══ ORIENTATION ════════════════════════════════════════ -->
+<div id="orient"><div class="orientwrap" id="orientwrap"></div></div>
 
 <!-- ══ MEMO ═══════════════════════════════════════════════ -->
 <div id="memo"><div class="memopage" id="memopage"></div></div>
@@ -425,7 +492,7 @@ const fmt  = n => Math.round(n).toLocaleString("en-US");
 
 /* ═══ STATE ═══════════════════════════════════════════════ */
 const S = {
-  names:["",""], round:1, role:"data", openDoc:"brief01",
+  solo:false, names:["",""], round:1, role:"data", openDoc:"brief01",
   read:{}, alloc:{}, history:[], answers:{}, checks:{}, benchOk:false,
   disbursed:null
 };
@@ -445,7 +512,8 @@ const ROUNDS = {
       docs:["brief01","map","arable","bench"], open:"arable", anchor:"arable", bench:["egypt","yemen","niger"],
       checks:[
         "Which candidate's ranking moved the most between Round 1 and Round 2? Nothing about the country changed — so what did?",
-        "Japan's physiological density is 8,218 — higher than Egypt's 8,078 — and Japan is not a candidate. Settle between you why not."
+        {pair:"Japan's physiological density is 8,218 — higher than Egypt's 8,078 — and Japan is not a candidate. Settle between you why not.",
+         solo:"Japan's physiological density is 8,218 — higher than Egypt's 8,078 — and Japan is not a candidate. Work out why not before you allocate."}
       ],
       ask:"Explain, in your own words, why arithmetic density gave you the wrong answer for Egypt." },
   3:{ budget:100, title:"Round 3 of 4", step:5,
@@ -461,10 +529,54 @@ const ROUNDS = {
       docs:["brief01","map","arable","bench","revision","annex","cut"], open:"annex", anchor:"cut", bench:null,
       checks:[
         "Niger's agricultural density is far lower than Bangladesh's. Does that mean Niger's farmers are better equipped? Check the yield column before you answer.",
-        "You cannot fund everyone now. Say out loud which candidate you are cutting, and be able to defend it."
+        {pair:"You cannot fund everyone now. Say out loud which candidate you are cutting, and be able to defend it.",
+         solo:"You cannot fund everyone now. Name the candidate you are cutting, and be able to defend it."}
       ],
       ask:"Final recommendation. Cite at least two different density measures, and name what you gave up." }
 };
+
+/* ═══ LOGO ════════════════════════════════════════════════
+   The mark encodes the lesson: a population crowded onto a thin
+   band of arable land, with near-empty territory above and below.
+   ═════════════════════════════════════════════════════════ */
+function markInner(dense){
+  let d="";
+  if(dense){
+    for(let r=0;r<2;r++) for(let i=0;i<12;i++)
+      d+='<circle cx="'+(11.4+i*3.8).toFixed(2)+'" cy="'+(30.1+r*3.8).toFixed(2)+'" r="1.42"/>';
+    [[17,18],[29,13],[43,19],[50,24],[21,46],[34,51],[46,44],[25,23],[39,42],[13,39]]
+      .forEach(q=>d+='<circle cx="'+q[0]+'" cy="'+q[1]+'" r="1.25" opacity=".34"/>');
+  } else {
+    for(let i=0;i<5;i++) d+='<circle cx="'+(18+i*7)+'" cy="32" r="2.9"/>';
+  }
+  const top = dense?27.4:26.0, bot = dense?36.8:38.0, R = dense?26:29;
+  const cid = "arableclip"+(dense?"L":"S");
+  return '<clipPath id="'+cid+'"><circle cx="32" cy="32" r="'+R+'"/></clipPath>'+
+    '<g clip-path="url(#'+cid+')">'+
+    '<rect x="0" y="'+top+'" width="64" height="'+(bot-top).toFixed(1)+
+      '" fill="currentColor" opacity="'+(dense?.12:.18)+'"/>'+
+    '<line x1="0" y1="'+top+'" x2="64" y2="'+top+'" stroke="currentColor" stroke-width="'+(dense?.9:1.5)+'" opacity=".55"/>'+
+    '<line x1="0" y1="'+bot+'" x2="64" y2="'+bot+'" stroke="currentColor" stroke-width="'+(dense?.9:1.5)+'" opacity=".55"/>'+
+    '<g fill="currentColor">'+d+'</g></g>';
+}
+function logoMark(size,dense){
+  return '<svg class="logo" viewBox="0 0 64 64" width="'+size+'" height="'+size+
+    '" role="img" aria-label="Global Food Security Unit">'+
+    '<circle cx="32" cy="32" r="30.5" fill="none" stroke="currentColor" stroke-width="'+
+      (dense?1.6:2.2)+'"/>'+
+    (dense?'<circle cx="32" cy="32" r="26" fill="none" stroke="currentColor" stroke-width=".9" opacity=".55"/>':'')+
+    markInner(dense)+'</svg>';
+}
+function logoSeal(size){
+  return '<svg class="seal-svg" viewBox="0 0 120 120" width="'+size+'" height="'+size+
+    '" role="img" aria-label="Seal of the Global Food Security Unit">'+
+    '<defs><path id="sealring" fill="none" d="M60,60 m-48,0 a48,48 0 1,1 96,0 a48,48 0 1,1 -96,0"/></defs>'+
+    '<circle cx="60" cy="60" r="58.5" fill="none" stroke="currentColor" stroke-width="1.4"/>'+
+    '<circle cx="60" cy="60" r="39.5" fill="none" stroke="currentColor" stroke-width="1" opacity=".55"/>'+
+    '<text font-size="7.4" letter-spacing="1.75" fill="currentColor">'+
+    '<textPath href="#sealring" startOffset="1%">GLOBAL FOOD SECURITY UNIT · CASE 2.1-EGY ·</textPath></text>'+
+    '<g transform="translate(60,60) scale(1.5) translate(-32,-32)">'+markInner(true)+'</g></svg>';
+}
 
 /* ═══ BOOT ════════════════════════════════════════════════ */
 const BOOT = [
@@ -474,6 +586,8 @@ const BOOT = [
   ["Status","<b>4 candidate countries pending review</b>"]
 ];
 (function boot(){
+  document.getElementById("loginLogo").innerHTML=logoMark(46,true);
+  document.getElementById("barLogo").innerHTML=logoMark(24,false);
   const ul=document.getElementById("bootlines");
   BOOT.forEach((l,i)=>{
     const li=document.createElement("li");
@@ -488,14 +602,25 @@ const BOOT = [
 })();
 const n1=document.getElementById("n1"), n2=document.getElementById("n2"),
       signin=document.getElementById("signin");
-function chkNames(){ signin.disabled = !(n1.value.trim() && n2.value.trim()); }
+function chkNames(){
+  signin.disabled = S.solo ? !n1.value.trim() : !(n1.value.trim() && n2.value.trim());
+}
 n1.addEventListener("input",chkNames); n2.addEventListener("input",chkNames);
+document.querySelectorAll(".modebtn").forEach(b=>b.addEventListener("click",()=>{
+  document.querySelectorAll(".modebtn").forEach(x=>x.classList.toggle("on",x===b));
+  S.solo = b.dataset.mode==="solo";
+  document.getElementById("fields").classList.toggle("solo",S.solo);
+  document.getElementById("n1").previousElementSibling; // no-op, keeps labels stable
+  document.querySelector('#fields .f .lbl').textContent = S.solo?"Analyst":"Analyst 1";
+  chkNames();
+}));
 signin.addEventListener("click",()=>{
-  S.names=[n1.value.trim(),n2.value.trim()];
+  S.names = S.solo ? [n1.value.trim()] : [n1.value.trim(),n2.value.trim()];
   document.getElementById("login").style.display="none";
   document.getElementById("app").classList.add("on");
-  document.getElementById("deskline").textContent=S.names[0]+"  ·  "+S.names[1];
+  document.getElementById("deskline").textContent=S.names.join("  ·  ");
   enterRound(1);
+  showOrient(true);
 });
 
 /* ═══ DOCUMENTS ═══════════════════════════════════════════ */
@@ -522,9 +647,9 @@ const DOCS = {
       if(S.role==="country"){
         return CANDIDATES.map(c=>
           '<h2>'+c.name+'</h2><p>'+c.profile+'</p>').join("")+
-          '<div class="note"><strong>Country Desk note.</strong> Your partner at the Data Desk is holding the figures. '+
-          'Neither desk can rank these five alone — the profiles explain <em>why</em> a number looks the way it does, '+
-          'and the numbers say <em>how much</em>.</div>';
+          '<div class="note"><strong>Country Desk note.</strong> '+(S.solo
+            ? 'The Data Desk view holds the figures. Neither view can rank these five alone — the profiles explain <em>why</em> a number looks the way it does, and the numbers say <em>how much</em>. Switch between them freely.'
+            : 'Your partner at the Data Desk is holding the figures. Neither desk can rank these five alone — the profiles explain <em>why</em> a number looks the way it does, and the numbers say <em>how much</em>.')+'</div>';
       }
       return '<p>Five countries have been referred to this desk for emergency cereal assistance. '+
         'The fund is <span class="num">$100M</span>. Round 1 evidence is limited to total population, '+
@@ -756,14 +881,17 @@ function renderDoc(){
   document.getElementById("roleBtn").textContent = S.role==="data"?"Data Desk":"Country Desk";
 }
 
+const ctext = c => typeof c==="string" ? c : (S.solo ? c.solo : c.pair);
 function delibHTML(){
   const r=ROUNDS[S.round];
   if(S.openDoc!==r.anchor) return "";
-  return '<div class="delib"><h2>Deliberation — both analysts</h2>'+
+  return '<div class="delib"><h2>Deliberation — '+(S.solo?"analyst review":"both analysts")+'</h2>'+
     r.checks.map((q,i)=>'<div class="dq"><input type="checkbox" id="ck'+i+'"'+
-      (S.checks[S.round+"-"+i]?" checked":"")+'><label for="ck'+i+'">'+q+'</label></div>').join("")+
+      (S.checks[S.round+"-"+i]?" checked":"")+'><label for="ck'+i+'">'+ctext(q)+'</label></div>').join("")+
     '<p class="req" style="margin-top:16px">'+r.ask+'</p>'+
-    '<textarea id="ans" placeholder="Both analysts must agree on this answer. It prints on your recommendation.">'+
+    '<textarea id="ans" placeholder="'+(S.solo
+      ?"Write it out before you allocate. It prints on your recommendation."
+      :"Both analysts must agree on this answer. It prints on your recommendation.")+'">'+
     (S.answers[S.round]||"")+'</textarea></div>';
 }
 function wireDelib(){
@@ -786,9 +914,11 @@ function renderBench(){
     return;
   }
   box.hidden=false; S.benchOk=false;
-  document.getElementById("benchwhy").textContent =
-    "Compute physiological density for each. Population ÷ arable area, to the nearest whole number. "+
-    "The Arable Land Survey stays sealed until all three are right.";
+  document.getElementById("benchwhy").innerHTML =
+    "Population &divide; arable area, to the nearest whole number. The survey stays sealed "+
+    "until all three are right.<br><span style=\"color:var(--ink-3)\">Worked example — Bangladesh: "+
+    "<span class=\"num\">167,030,000</span> &divide; <span class=\"num\">33,819</span> = "+
+    "<span class=\"num\">4,939</span>/sq&nbsp;mi.</span>";
   const rows=document.getElementById("benchrows"); rows.innerHTML="";
   ids.forEach(id=>{
     const c=byId(id);
@@ -940,11 +1070,13 @@ function showMemo(){
   const final=S.history[3].alloc;
   const p=document.getElementById("memopage");
   p.innerHTML=
-    '<div class="memohead"><div class="org">Global Food Security Unit</div>'+
-    '<div class="sub">Emergency Cereal Fund · Case 2.1-EGY</div></div>'+
+    '<div class="memohead" style="display:flex;gap:16px;align-items:center">'+
+    '<span style="color:var(--seal)">'+logoSeal(64)+'</span><span>'+
+    '<div class="org">Global Food Security Unit</div>'+
+    '<div class="sub">Emergency Cereal Fund · Case 2.1-EGY</div></span></div>'+
     '<h1>Recommendation</h1>'+
     '<dl class="memogrid">'+
-    '<dt>Analysts</dt><dd>'+S.names[0]+' &nbsp;·&nbsp; '+S.names[1]+'</dd>'+
+    '<dt>'+(S.solo?"Analyst":"Analysts")+'</dt><dd>'+S.names.join(' &nbsp;·&nbsp; ')+'</dd>'+
     '<dt>Case</dt><dd>2.1-EGY — Emergency Cereal Fund</dd>'+
     '<dt>Fund</dt><dd>$100M original · $25M disbursed Round 1 · $45M allocated final round</dd>'+
     '</dl>'+
@@ -970,7 +1102,8 @@ function showMemo(){
       ROUNDS[h.round].ask+'</div><div class="a">'+
       (h.answer.replace(/[<>&]/g,ch=>({"<":"&lt;",">":"&gt;","&":"&amp;"}[ch]))||"—")+
       '</div></div>').join("")+
-    '<div class="sig"><div>'+S.names[0]+' — signature</div><div>'+S.names[1]+' — signature</div></div>'+
+    '<div class="sig"'+(S.solo?' style="grid-template-columns:1fr"':'')+'>'+
+    S.names.map(n=>'<div>'+n+' — signature</div>').join("")+'</div>'+
     '<div class="memoactions">'+
     '<button class="btn" id="printMemo">Print / Save PDF</button>'+
     '<button class="btn ghost" id="backToCase">Back to case file</button></div>';
@@ -978,6 +1111,110 @@ function showMemo(){
   document.getElementById("printMemo").addEventListener("click",()=>window.print());
   document.getElementById("backToCase").addEventListener("click",()=>
     document.getElementById("memo").classList.remove("on"));
+}
+
+/* ═══ ORIENTATION ═════════════════════════════════════════ */
+function showOrient(firstRun){
+  const w=document.getElementById("orientwrap");
+  const you = S.solo ? "you" : "you and your partner";
+  const Your = S.solo ? "Your" : "Your desk's";
+  w.innerHTML =
+    '<div class="orienthead"><span>'+logoSeal(104)+'</span><span>'+
+    '<h1>Assignment</h1><div class="k">CASE 2.1-EGY · EMERGENCY CEREAL FUND · '+
+    (S.solo?'DUTY ANALYST':'TWO-ANALYST DESK')+'</div></span></div>'+
+    '<p class="lead">Five countries have been referred to this desk for emergency cereal '+
+    'assistance. The fund holds <span class="num">$100 million</span>, and '+you+' will decide '+
+    'how it is divided.</p>'+
+    '<p>You will not be given all the evidence at once. It arrives in four rounds. After each '+
+    'round you commit an allocation and lock it — and then the next round changes what you know. '+
+    'Changing your mind is expected. The record of how your recommendation moved is part of what '+
+    'you submit at the end.</p>'+
+    '<ul class="rules">'+
+    '<li><b>Evidence arrives in the Case File</b>, on the left. A red dot means you have not read '+
+    'it yet. Documents marked <em>pending release</em> are sealed until a later round.</li>'+
+    '<li><b>You divide the fund in the Allocation panel</b>, on the right. The entire fund must be '+
+    'committed before a round can be locked — you cannot hold money back.</li>'+
+    '<li><b>Some documents stay sealed until you have done the arithmetic yourself.</b> When that '+
+    'happens, a Calculation Bench appears under the Case File and tells you what it needs.</li>'+
+    '</ul>'+
+    '<p style="margin-top:18px">'+Your+' recommendation is issued over '+
+    (S.solo?'your name':'both your names')+'. There is no score on this desk. What is assessed is '+
+    'whether the decision can be defended.</p>'+
+    '<div class="memoactions"><button class="btn" id="orientGo">'+
+    (firstRun?"Open Round 1":"Back to case file")+'</button>'+
+    (firstRun?'<button class="btn ghost" id="orientSkip">Skip the walkthrough</button>':'')+
+    '</div>';
+  document.getElementById("orient").classList.add("on");
+  document.getElementById("orientGo").addEventListener("click",()=>{
+    document.getElementById("orient").classList.remove("on");
+    if(firstRun) startCoach();
+  });
+  const sk=document.getElementById("orientSkip");
+  if(sk) sk.addEventListener("click",()=>document.getElementById("orient").classList.remove("on"));
+}
+document.getElementById("helpBtn").addEventListener("click",()=>showOrient(false));
+
+/* ═══ COACHMARKS ══════════════════════════════════════════
+   Shown once, on Round 1 only. Each step spotlights one panel
+   by punching a hole in a full-page dim layer.
+   ═════════════════════════════════════════════════════════ */
+const COACH=[
+  { sel:".col.rail", side:"right", h:"Case File",
+    t:"Every document you have been issued. A red dot means unread. New evidence lands here at the start of each round — and one document is always sealed until later." },
+  { sel:".col.doc", side:"left", h:"The open document",
+    t:"Round 1 gives you population, land area, and settlement pattern. Nothing else. Use <em>Viewing As</em> at the top to switch between the figures and the country profiles." },
+  { sel:".col.alloc", side:"left", h:"Allocation",
+    t:"Divide the fund here in $5M steps. All of it must be committed before the round will lock." },
+  { sel:"#lockBtn", side:"left", h:"Locking a round",
+    t:"Locking records your allocation and releases the next batch of evidence. It will stay greyed out until the fund is fully committed and the deliberation below the document is done." }
+];
+let coachIdx=0, coachHole=null, coachTip=null, coachDim=null;
+function startCoach(){ coachIdx=0; drawCoach(); window.addEventListener("resize",drawCoach); }
+function endCoach(){
+  window.removeEventListener("resize",drawCoach);
+  if(coachHole) coachHole.remove();
+  if(coachTip) coachTip.remove();
+  if(coachDim) coachDim.forEach(d=>d.remove());
+  coachHole=coachTip=coachDim=null;
+}
+function drawCoach(){
+  const step=COACH[coachIdx]; if(!step) return endCoach();
+  const el=document.querySelector(step.sel); if(!el) return endCoach();
+  const r=el.getBoundingClientRect(), pad=4;
+  if(!coachHole){
+    coachDim=["t","r","b","l"].map(()=>{
+      const d=document.createElement("div"); d.className="coach-dim";
+      document.body.appendChild(d); return d;
+    });
+    coachHole=document.createElement("div"); coachHole.className="coach-hole";
+    document.body.appendChild(coachHole);
+    coachTip=document.createElement("div"); coachTip.className="coach-tip";
+    document.body.appendChild(coachTip);
+  }
+  const W=window.innerWidth, H=window.innerHeight;
+  const x1=Math.max(0,r.left-pad), y1=Math.max(0,r.top-pad),
+        x2=Math.min(W,r.right+pad), y2=Math.min(H,r.bottom+pad);
+  const place=(el,l,t,w,h)=>Object.assign(el.style,
+    {left:l+"px",top:t+"px",width:Math.max(0,w)+"px",height:Math.max(0,h)+"px"});
+  place(coachDim[0], 0,  0,  W,     y1);        // above
+  place(coachDim[1], x2, y1, W-x2,  y2-y1);     // right
+  place(coachDim[2], 0,  y2, W,     H-y2);      // below
+  place(coachDim[3], 0,  y1, x1,    y2-y1);     // left
+  Object.assign(coachHole.style,{
+    left:(r.left-pad)+"px", top:(r.top-pad)+"px",
+    width:(r.width+pad*2)+"px", height:(r.height+pad*2)+"px"
+  });
+  coachTip.innerHTML='<h4>'+step.h+'</h4><p>'+step.t+'</p><div class="row">'+
+    '<span class="step">'+(coachIdx+1)+' of '+COACH.length+'</span>'+
+    '<button class="btn sm ghost" id="coachSkip">Skip</button>'+
+    '<button class="btn sm" id="coachNext">'+(coachIdx===COACH.length-1?"Start":"Next")+'</button></div>';
+  const tw=272, th=coachTip.offsetHeight||150;
+  let left = step.side==="right" ? r.right+14 : r.left-tw-14;
+  left = Math.max(10, Math.min(window.innerWidth-tw-10, left));
+  let top = Math.max(10, Math.min(window.innerHeight-th-10, r.top + r.height/2 - th/2));
+  Object.assign(coachTip.style,{left:left+"px", top:top+"px"});
+  document.getElementById("coachNext").addEventListener("click",()=>{coachIdx++;drawCoach();});
+  document.getElementById("coachSkip").addEventListener("click",endCoach);
 }
 
 /* ═══ INSTRUCTOR NOTES ════════════════════════════════════ */
@@ -1001,9 +1238,31 @@ Students work in pairs at one machine. Runtime is about 35 minutes.</p>
 physiological density, agricultural density, arable, carrying capacity</em> (previewed).</li>
 </ul>
 
+<h2>Solo or paired</h2>
+<p>The sign-in screen offers <strong>With a partner</strong> or <strong>On my own</strong>.
+Paired is the default and the mode the lab was designed around — the deliberation gates exist to
+force the conversation. Solo mode drops the second name field, reworks the prompts that assume
+someone to argue with ("settle between you" becomes "work out why"), and prints a single signature
+line. Use it for absences, make-up work, or homework. Everything else is identical.</p>
+
+<h2>How students are oriented</h2>
+<p>No teacher preamble is required — the lab briefs itself in three layers:</p>
+<ul>
+<li><strong>The assignment screen</strong>, after sign-in. In-fiction, about 150 words: who they
+are, what they decide, and the three interface rules. The <code>?</code> in the top bar reopens it
+at any point.</li>
+<li><strong>Four coachmarks</strong> on Round 1 only, spotlighting the Case File, the document pane,
+the Allocation panel, and the lock button. Skippable in one click.</li>
+<li><strong>A worked example in the Calculation Bench</strong>, which appears at the moment the
+bench first does — Bangladesh, 167,030,000 ÷ 33,819 = 4,939. Nothing about physiological density is
+explained before students need it.</li>
+</ul>
+<p>Budget about three minutes for all of it. If you would rather brief the class yourself, have
+them click <em>Skip the walkthrough</em>.</p>
+
 <h2>Timing</h2>
 <ul>
-<li><strong>0–3</strong> Sign-in, Briefing 01, settlement patterns.</li>
+<li><strong>0–3</strong> Sign-in, assignment screen, walkthrough, Briefing 01.</li>
 <li><strong>3–8</strong> Round 1 lock — arithmetic density only.</li>
 <li><strong>8–18</strong> Round 2 — Arable Land Survey. Calculation Bench. <em>The pivot.</em></li>
 <li><strong>18–25</strong> Round 3 — Sudan data revision.</li>
