@@ -62,6 +62,18 @@ figures they computed, and four written justifications — the gradeable artifac
 The sign-in screen offers **With a partner** (default) or **On my own**. Solo mode drops the second
 name field, reworks the prompts that assume someone to argue with, and prints a single signature line.
 
+## Pacing the reveal
+
+Sealed documents show no titles — the case file lists them as `Sealed document · GFSU-2.1/07 ·
+release pending`, so students see how much is coming but not what it says. Briefing 01 shows the
+five-step chain with unreleased steps redacted. Two predictions are committed before the evidence
+that answers them (least farmland per person, then Egypt vs Yemen production) and print on the memo
+right or wrong, and a standing prompt in Rounds 1–3 asks students to name what the current evidence
+cannot tell them.
+
+The aim is not to stop strong students reasoning ahead — that is the skill — but to make it a
+scored move rather than something read off the sidebar. No decoys or false data are used.
+
 ## Orientation
 
 No teacher preamble needed. Students get an in-fiction assignment screen after sign-in, four

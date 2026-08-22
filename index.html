@@ -290,6 +290,10 @@ table.data caption{caption-side:bottom;text-align:left;font-size:11.5px;color:va
   border:1px solid var(--rule);padding:9px 12px;font-size:13.5px;line-height:1.5}
 .chain .ch .i{flex:0 0 auto;width:20px;height:20px;background:var(--seal);color:var(--panel);
   font:600 12px/20px var(--d-mono);text-align:center}
+.chain .ch.sealed{opacity:.72}
+.chain .ch.sealed .i{background:var(--rule-2);color:var(--panel)}
+.chain .redact{letter-spacing:-.5px;color:var(--rule-2);user-select:none}
+.chain .pend{display:block;font-family:var(--d-mono);font-size:11px;color:var(--ink-3);margin-top:2px}
 .chain .ch b{display:block;font-family:var(--d-display);font-weight:600;font-size:12px;
   letter-spacing:.07em;text-transform:uppercase;margin-bottom:1px}
 /* ── ration bars ────────────────────────────────────────── */
@@ -342,9 +346,13 @@ table.data caption{caption-side:bottom;text-align:left;font-size:11.5px;color:va
   text-transform:uppercase;margin-top:7px}
 .arablefig .val{font-family:var(--d-mono);font-size:11px;color:var(--ink-3);margin-top:2px;line-height:1.45}
 /* ── receipt ────────────────────────────────────────────── */
-#receipt{position:fixed;inset:0;z-index:74;background:rgba(8,12,14,.6);display:none;
+#receipt,#predict{position:fixed;inset:0;z-index:74;background:rgba(8,12,14,.6);display:none;
   align-items:center;justify-content:center;padding:24px}
-#receipt.on{display:flex}
+#receipt.on,#predict.on{display:flex}
+.opts{display:flex;flex-direction:column;gap:6px}
+.optbtn{text-align:left;background:var(--ground);border:1px solid var(--rule-2);padding:10px 13px;
+  font:500 14px var(--d-body);border-radius:0}
+.optbtn:hover{background:var(--seal-soft);border-color:var(--seal)}
 .rcard{width:min(470px,100%);background:var(--panel);border:1px solid var(--rule-2);
   border-top:3px solid var(--seal);padding:20px 22px 22px;box-shadow:0 10px 34px rgba(0,0,0,.4)}
 .rcard .k{font-family:var(--d-mono);font-size:11.5px;color:var(--ink-3);margin-bottom:5px}
@@ -525,6 +533,9 @@ table.data caption{caption-side:bottom;text-align:left;font-size:11.5px;color:va
 <!-- ══ RECEIPT ════════════════════════════════════════════ -->
 <div id="receipt"><div class="rcard" id="receiptcard"></div></div>
 
+<!-- ══ PREDICTION ═════════════════════════════════════════ -->
+<div id="predict"><div class="rcard" id="predictcard"></div></div>
+
 <!-- ══ AFTERMATH ══════════════════════════════════════════ -->
 <div id="after"><div class="orientwrap" id="afterwrap"></div></div>
 
@@ -600,11 +611,26 @@ const fmt  = n => Math.round(n).toLocaleString("en-US");
 /* ═══ STATE ═══════════════════════════════════════════════ */
 const S = {
   solo:false, lens:"arith", names:["",""], round:1, role:"data", openDoc:"brief01",
-  read:{}, alloc:{}, history:[], answers:{}, checks:{}, benchOk:false,
+  read:{}, alloc:{}, history:[], answers:{}, checks:{}, predictions:{}, benchOk:false,
   disbursed:null
 };
 CANDIDATES.forEach(c=>S.alloc[c.id]=0);
 
+/* The chain, revealed one step at a time. Sealed steps show a redaction bar
+   rather than their names — knowing that more is coming is motivating; knowing
+   what it says is a spoiler. */
+const CHAIN = [
+  {n:1, round:1, bar:22, name:"Where the people are",
+   desc:"Population against land. How crowded a country is, and how crowded its farmland is."},
+  {n:2, round:2, bar:19, name:"Farmland per person",
+   desc:"The density figure turned upside down &mdash; acres of cropland standing behind each person."},
+  {n:3, round:4, bar:9,  name:"Yield",
+   desc:"What that land actually produces. Farmland per person &times; yield = food per person."},
+  {n:4, round:4, bar:14, name:"The gap",
+   desc:"Food grown against food needed. A country short of the line has to find the difference."},
+  {n:5, round:4, bar:17, name:"Ability to pay",
+   desc:"A rich country buys its way out. A poor one cannot. That is where need actually begins."}
+];
 const MEASURES = {
   arith:{ label:"Arithmetic density", formula:"population &divide; <em>total</em> land area",
     ex:'Worked example — Bangladesh: <span class="num">167,030,000</span> &divide; <span class="num">57,320</span> = <span class="num">2,914</span>/sq&nbsp;mi.',
@@ -625,7 +651,8 @@ const ROUNDS = {
       docs:["brief01","map"], open:"brief01", anchor:"map", bench:{rows:[{id:"egypt",m:"arith"},{id:"sudan",m:"arith"}]},
       checks:[
         "Rank the five candidates by arithmetic density. Which looks most urgent? Which looks least?",
-        "Look at the settlement patterns. Two candidates have the same arithmetic density story but completely different distributions — find them."
+        "Look at the settlement patterns. Two candidates have the same arithmetic density story but completely different distributions — find them.",
+        "Name one thing the evidence in this round cannot tell you. You are about to be given more of it — say what you expect to be missing."
       ],
       ask:"Before you see any other evidence: which candidate are you funding most heavily, and what is your reason?" },
   2:{ budget:100, title:"Round 2 of 4", step:5,
@@ -634,7 +661,8 @@ const ROUNDS = {
       checks:[
         "Which candidate's ranking moved the most between Round 1 and Round 2? Nothing about the country changed — so what did?",
         {pair:"Japan's physiological density is 8,218 — higher than Egypt's 8,078 — and Japan is not a candidate. Settle between you why not.",
-         solo:"Japan's physiological density is 8,218 — higher than Egypt's 8,078 — and Japan is not a candidate. Work out why not before you allocate."}
+         solo:"Japan's physiological density is 8,218 — higher than Egypt's 8,078 — and Japan is not a candidate. Work out why not before you allocate."},
+        "Name one thing the evidence in this round cannot tell you. You are about to be given more of it — say what you expect to be missing."
       ],
       ask:"Explain, in your own words, why arithmetic density gave you the wrong answer for Egypt." },
   3:{ budget:100, title:"Round 3 of 4", step:5,
@@ -642,7 +670,8 @@ const ROUNDS = {
       docs:["brief01","map","arable","bench","lens","revision"], open:"revision", anchor:"revision", bench:null,
       checks:[
         "Sudan's national arithmetic density did not change in the revision. Its distribution changed enormously. Which of the two does a national density figure actually report?",
-        "Does any density measure on this desk detect what is happening in Sudan? If not, what would?"
+        "Does any density measure on this desk detect what is happening in Sudan? If not, what would?",
+        "Name one thing the evidence in this round cannot tell you. You are about to be given more of it — say what you expect to be missing."
       ],
       ask:"Sudan's densities look unremarkable next to Egypt's. Argue for or against funding Sudan anyway." },
   4:{ budget:45, title:"Final Round", step:5,
@@ -802,22 +831,23 @@ const DOCS = {
         'territory. It reports how many people there are per square mile — not where in that territory '+
         'any of them actually live.</div>'+
         '<h2>Why this desk measures density at all</h2>'+
-        '<p>A fair question, and you should ask it before you move a single dollar: '+
-        '<strong>density is not a measure of hunger.</strong> Japan is one of the most crowded '+
-        'countries on earth per acre of farmland and nobody there is short of food.</p>'+
-        '<p>Density is the <em>first</em> step in a chain, and this desk works the whole chain:</p>'+
-        '<div class="chain">'+
-        [["1","Physiological density","How many people depend on each square mile of farmland."],
-         ["2","Farmland per person","The same number turned upside down. Egypt has fractions of an acre per person."],
-         ["3","Yield","What that land actually produces. Land per person &times; yield = food per person."],
-         ["4","The gap","Food grown against food needed. A country short of the line must buy the difference."],
-         ["5","Ability to pay","A rich country buys its way out. A poor one cannot. That is where need begins."]]
-         .map(r=>'<div class="ch"><span class="i">'+r[0]+'</span><span><b>'+r[1]+'</b>'+r[2]+'</span></div>').join("")+
-        '</div>'+
-        '<div class="note"><strong>So density does not tell you who is hungry.</strong> It tells you '+
-        'how much pressure sits on a country\'s own land, which is where the chain starts. Steps 3, 4 '+
-        'and 5 are released in later rounds. Do not skip to the end — the point of this case is that '+
-        'each step changes the answer.</div>';
+        '<p>A fair question, and you should ask it before you move a single dollar. '+
+        '<strong>Density on its own is not a measure of hunger.</strong> Japan is one of the most '+
+        'crowded countries on earth per acre of farmland and nobody there is short of food.</p>'+
+        '<p>Density is where this desk <em>starts</em>. Five steps stand between a density figure '+
+        'and a defensible decision about cereal. Analysis releases them one at a time, and you are '+
+        'expected to decide on what you have at each stage.</p>'+
+        '<div class="chain">'+CHAIN.map(st=>{
+          const open = S.round>=st.round;
+          return '<div class="ch'+(open?'':' sealed')+'"><span class="i">'+st.n+'</span><span>'+
+            (open ? '<b>'+st.name+'</b>'+st.desc
+                  : '<b><span class="redact">'+"\u2588".repeat(st.bar)+'</span></b>'+
+                    '<span class="pend">Released in a later round</span>')+'</span></div>';
+        }).join("")+'</div>'+
+        '<div class="note"><strong>Standing instruction.</strong> Before you lock any round, say out '+
+        'loud what the evidence in front of you <em>cannot</em> tell you. An analyst who names the '+
+        'gap before the next step arrives is doing the job correctly. Write it down — a prediction '+
+        'you got right is worth more on your record than a safe answer.</div>';
     }
   },
   map:{
@@ -1125,8 +1155,12 @@ function renderRail(){
     b.disabled=!avail;
     if(avail&&!S.read[id]) unread++;
     b.setAttribute("aria-current", S.openDoc===id ? "true":"false");
-    b.innerHTML='<span class="dot"></span><span><span class="t">'+d.title+'</span>'+
-      '<span class="s">'+(avail?d.from+" · "+d.time:"pending release")+'</span></span>';
+    // Unreleased documents show no title: the old rail spelled out the whole
+    // arc ("Food Balance — Land, Yield and the Gap") from Round 1.
+    b.innerHTML='<span class="dot"></span><span><span class="t">'+
+      (avail?d.title:"Sealed document")+'</span>'+
+      '<span class="s">'+(avail?d.from+" · "+d.time:"GFSU-2.1/"+
+        String(DOC_ORDER.indexOf(id)+1).padStart(2,"0")+" · release pending")+'</span></span>';
     b.addEventListener("click",()=>{S.openDoc=id;S.read[id]=true;renderRail();renderDoc();});
     li.appendChild(b); ul.appendChild(li);
   });
@@ -1345,8 +1379,44 @@ document.getElementById("lockBtn").addEventListener("click",()=>{
       S.alloc[big.id]-=ROUNDS[next].step; t-=ROUNDS[next].step;
     }
   }
-  showReceipt(S.round,snap,()=>enterRound(next));
+  showReceipt(S.round,snap,()=>showPrediction(next,()=>enterRound(next)));
 });
+
+/* ═══ PREDICTIONS ═════════════════════════════════════════
+   Committed before the reveal that answers them. The point is
+   not to stop students reasoning ahead — it is to reward it,
+   and to make a wrong guess memorable rather than invisible.
+   ═════════════════════════════════════════════════════════ */
+const PREDICTIONS = {
+  2:{ q:"You are about to be told how much of each country is farmland. Which of the five do you "+
+       "expect has the <em>least</em> farmland per person?",
+      opts:["Egypt","Yemen","Bangladesh","Sudan","Niger"], answer:0,
+      short:"Least farmland per person" },
+  4:{ q:"Egypt and Yemen turned out to have almost the same physiological density and almost the "+
+       "same farmland per person. You are about to see what that land produces. Who grows more "+
+       "cereal per person?",
+      opts:["About the same","Egypt, slightly more","Egypt, several times more","Yemen, more"],
+      answer:2, short:"Egypt vs Yemen production" }
+};
+function showPrediction(round,then){
+  const P=PREDICTIONS[round];
+  if(!P) return then();
+  const card=document.getElementById("predictcard");
+  card.innerHTML=
+    '<div class="k">GLOBAL FOOD SECURITY UNIT &middot; ANALYST LOG</div>'+
+    '<h3>On the record</h3>'+
+    '<p class="head">'+P.q+'</p>'+
+    '<div class="opts">'+P.opts.map((o,i)=>
+      '<button class="optbtn" data-i="'+i+'">'+o+'</button>').join("")+'</div>'+
+    '<p style="font-size:11.5px;color:var(--ink-3);margin:14px 0 0;line-height:1.45">'+
+    'Recorded on your recommendation, right or wrong. Guessing well here is the skill being '+
+    'assessed &mdash; there is no penalty for being wrong and no credit for refusing to commit.</p>';
+  document.getElementById("predict").classList.add("on");
+  card.querySelectorAll(".optbtn").forEach(b=>b.addEventListener("click",()=>{
+    S.predictions[round]={pick:+b.dataset.i, correct:(+b.dataset.i)===P.answer};
+    document.getElementById("predict").classList.remove("on"); then();
+  }));
+}
 
 /* ═══ OUTCOME: what the allocation tracked ════════════════
    Rank correlation between the dollars committed and each
@@ -1497,6 +1567,15 @@ function showMemo(){
       S.history.map(h=>'<td class="n">'+h.alloc[c.id]+'</td>').join("")+'</tr>').join("")+
     '</tbody><caption>Nothing about these five countries changed across the four rounds. '+
     'Only the evidence available to this desk changed.</caption></table></div>'+
+    (Object.keys(S.predictions).length?'<h2>Predictions on the record</h2>'+
+      '<div class="tablewrap"><table class="data"><thead><tr><th>Before round</th>'+
+      '<th>Question</th><th>Called it</th><th>Outcome</th></tr></thead><tbody>'+
+      Object.keys(S.predictions).map(r=>{
+        const P=PREDICTIONS[r], g=S.predictions[r];
+        return '<tr><td class="n">'+r+'</td><td>'+P.short+'</td><td>'+P.opts[g.pick]+
+          '</td><td style="color:'+(g.correct?'var(--stable)':'var(--ink-2)')+'">'+
+          (g.correct?'Correct':'Called '+P.opts[P.answer])+'</td></tr>';
+      }).join("")+'</tbody><caption>Committed before the evidence arrived.</caption></table></div>':'')+
     '<h2>What your allocation followed</h2>'+
     '<div class="mirror">'+S.history.map(h=>{
       const t=trackReport(h.alloc,h.round);
@@ -1670,10 +1749,36 @@ explained before students need it.</li>
 <p>Budget about three minutes for all of it. If you would rather brief the class yourself, have
 them click <em>Skip the walkthrough</em>.</p>
 
+<h2>Pacing the reveal</h2>
+<p>The lab has to establish <em>why</em> density is on the desk without giving away what the later
+evidence says. Four things do that work:</p>
+<ul>
+<li><strong>Sealed documents show no titles.</strong> The case file lists unreleased items as
+<code>Sealed document &middot; GFSU-2.1/07 &middot; release pending</code>. Students can see how much
+is still coming, which is motivating, but not what it says.</li>
+<li><strong>The chain is redacted.</strong> Briefing 01 shows five numbered steps with only the
+released ones named; the rest are block bars. The premise lands ("density on its own is not a
+measure of hunger; five steps stand between a density figure and a decision") without the content.</li>
+<li><strong>Two predictions are committed before the reveal that answers them</strong> — least
+farmland per person before Round 2, and Egypt vs Yemen production before Round 4. Both print on the
+memo, right or wrong.</li>
+<li><strong>A standing "name the gap" prompt</strong> in Rounds 1&ndash;3 asks students to say what
+the current evidence cannot tell them, before the next step arrives.</li>
+</ul>
+<p><strong>You cannot stop the strongest pairs from reasoning ahead, and you should not try.</strong>
+A student who works out in Round 2 that yield must matter has done exactly the thing this lab
+teaches. The design converts that from a spoiler into a scored move: they commit it as a prediction,
+and the memo shows they called it before the data arrived. What the sealing prevents is not
+insight — it is <em>reading the answer off the sidebar</em>, which is what the case file used to
+allow.</p>
+<p>One thing deliberately avoided: <strong>no decoys or false data.</strong> Withholding evidence is
+honest and is how the job works; planting misleading figures would teach students not to trust the
+numbers, which is the opposite of the point.</p>
+
 <h2>Timing</h2>
 <ul>
 <li><strong>0–3</strong> Sign-in, assignment screen, walkthrough, Briefing 01.</li>
-<li><strong>3–8</strong> Round 1 lock — arithmetic density only.</li>
+<li><strong>3–8</strong> Round 1 lock — arithmetic density only, then the first prediction.</li>
 <li><strong>8–18</strong> Round 2 — Arable Land Survey. Calculation Bench. <em>The pivot.</em></li>
 <li><strong>18–25</strong> Round 3 — Sudan data revision.</li>
 <li><strong>25–33</strong> Final round — Economic Annex and the fund cut.</li>
