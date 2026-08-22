@@ -1,0 +1,1077 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Allocation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Narrow:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* ── tokens ─────────────────────────────────────────────── */
+:root{
+  --ground:#E8EAE6; --panel:#F7F8F6; --panel-2:#DFE3DE; --sunk:#D5DAD4;
+  --ink:#16191C; --ink-2:#565E64; --ink-3:#7C858B;
+  --rule:#C3CAC3; --rule-2:#AEB6AE;
+  --seal:#1F4E5F; --seal-soft:#D9E4E7;
+  --critical:#9E2B1E; --critical-soft:#F0DCD8;
+  --watch:#8A5D12; --watch-soft:#F0E5CE;
+  --stable:#2F6B4F; --stable-soft:#D9E7DF;
+  --shadow:rgba(22,25,28,.13);
+  --d-display:"Archivo Narrow","Arial Narrow",Helvetica,sans-serif;
+  --d-body:"IBM Plex Sans",-apple-system,Segoe UI,Roboto,sans-serif;
+  --d-mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --ground:#101315; --panel:#191D20; --panel-2:#22272A; --sunk:#0B0E10;
+    --ink:#E2E6E2; --ink-2:#98A2A6; --ink-3:#6E787D;
+    --rule:#2F373B; --rule-2:#3D474C;
+    --seal:#6FB2C6; --seal-soft:#16303A;
+    --critical:#DE7060; --critical-soft:#3A1B16;
+    --watch:#D2A249; --watch-soft:#332812;
+    --stable:#6FB68C; --stable-soft:#152E22;
+    --shadow:rgba(0,0,0,.5);
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#101315; --panel:#191D20; --panel-2:#22272A; --sunk:#0B0E10;
+  --ink:#E2E6E2; --ink-2:#98A2A6; --ink-3:#6E787D;
+  --rule:#2F373B; --rule-2:#3D474C;
+  --seal:#6FB2C6; --seal-soft:#16303A;
+  --critical:#DE7060; --critical-soft:#3A1B16;
+  --watch:#D2A249; --watch-soft:#332812;
+  --stable:#6FB68C; --stable-soft:#152E22;
+  --shadow:rgba(0,0,0,.5);
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0; background:var(--ground); color:var(--ink);
+  font:400 15px/1.5 var(--d-body);
+  -webkit-font-smoothing:antialiased; overflow:hidden;
+}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--seal);outline-offset:2px}
+.num{font-family:var(--d-mono);font-variant-numeric:tabular-nums}
+.lbl{
+  font-family:var(--d-display);font-weight:600;font-size:11px;
+  letter-spacing:.11em;text-transform:uppercase;color:var(--ink-3);
+}
+
+/* ── boot / login ───────────────────────────────────────── */
+#login{position:fixed;inset:0;z-index:60;background:var(--sunk);
+  display:flex;align-items:center;justify-content:center;padding:24px}
+.boot{width:min(620px,100%);font-family:var(--d-mono);font-size:13px;color:var(--ink-2)}
+.boot .seal{
+  font-family:var(--d-display);font-weight:700;font-size:30px;letter-spacing:.03em;
+  color:var(--ink);line-height:1.1;margin-bottom:2px;text-transform:uppercase
+}
+.boot .sub{font-family:var(--d-display);font-size:13px;letter-spacing:.22em;
+  text-transform:uppercase;color:var(--seal);margin-bottom:26px}
+.boot ul{list-style:none;margin:0 0 22px;padding:0;min-height:96px}
+.boot li{opacity:0;animation:fade .28s ease forwards;display:flex;gap:10px}
+.boot li b{color:var(--stable);font-weight:500}
+@keyframes fade{to{opacity:1}}
+.card{background:var(--panel);border:1px solid var(--rule);padding:22px 24px 24px;
+  box-shadow:0 1px 0 var(--rule-2)}
+.card h2{font-family:var(--d-display);font-weight:600;font-size:17px;letter-spacing:.04em;
+  text-transform:uppercase;margin:0 0 4px}
+.card p.hint{margin:0 0 18px;font-size:13.5px;color:var(--ink-2);max-width:62ch}
+.fields{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px}
+label.f{display:flex;flex-direction:column;gap:5px}
+input[type=text]{
+  font:400 15px/1.4 var(--d-body);background:var(--ground);color:var(--ink);
+  border:1px solid var(--rule-2);border-bottom-width:2px;padding:8px 10px;border-radius:0
+}
+input[type=text]::placeholder{color:var(--ink-3)}
+.btn{
+  font-family:var(--d-display);font-weight:600;font-size:14px;letter-spacing:.09em;
+  text-transform:uppercase;background:var(--seal);color:var(--panel);
+  border:1px solid var(--seal);padding:10px 22px;border-radius:0
+}
+.btn[disabled]{background:var(--panel-2);color:var(--ink-3);border-color:var(--rule-2);cursor:not-allowed}
+.btn.ghost{background:transparent;color:var(--seal)}
+.btn.sm{font-size:12px;padding:6px 12px}
+.linkish{background:none;border:0;padding:0;color:var(--seal);text-decoration:underline;
+  font-size:13px;font-family:var(--d-body)}
+
+/* ── shell ──────────────────────────────────────────────── */
+#app{display:none;height:100%;flex-direction:column}
+#app.on{display:flex}
+.topbar{
+  display:flex;align-items:center;gap:18px;padding:0 14px;height:46px;flex:0 0 auto;
+  background:var(--seal);color:#F7F8F6;border-bottom:1px solid var(--rule-2)
+}
+:root[data-theme="dark"] .topbar,
+:root:not([data-theme="light"]) .topbar{color:var(--sunk)}
+@media (prefers-color-scheme:light){:root:not([data-theme="dark"]) .topbar{color:#F7F8F6}}
+.topbar .org{font-family:var(--d-display);font-weight:700;font-size:15px;letter-spacing:.09em;
+  text-transform:uppercase;white-space:nowrap}
+.topbar .meta{font-family:var(--d-mono);font-size:12px;opacity:.86;white-space:nowrap}
+.topbar .spacer{flex:1}
+.roundchip{
+  font-family:var(--d-display);font-weight:600;font-size:12px;letter-spacing:.09em;
+  text-transform:uppercase;border:1px solid currentColor;padding:3px 10px
+}
+.main{flex:1;display:grid;grid-template-columns:236px minmax(0,1fr) 268px;min-height:0}
+.col{display:flex;flex-direction:column;min-height:0;background:var(--panel)}
+.col.rail{border-right:1px solid var(--rule)}
+.col.alloc{border-left:1px solid var(--rule)}
+.col.doc{background:var(--ground)}
+.colhead{
+  flex:0 0 auto;padding:9px 12px 8px;border-bottom:1px solid var(--rule);
+  background:var(--panel-2);display:flex;align-items:center;gap:8px
+}
+.scroll{overflow-y:auto;overflow-x:hidden;flex:1;min-height:0}
+
+/* ── case file rail ─────────────────────────────────────── */
+.filelist{list-style:none;margin:0;padding:6px 0}
+.filelist li{margin:0}
+.fileitem{
+  width:100%;text-align:left;background:none;border:0;border-bottom:1px solid var(--rule);
+  padding:9px 12px;display:flex;gap:9px;align-items:flex-start;line-height:1.35
+}
+.fileitem:hover{background:var(--panel-2)}
+.fileitem[aria-current="true"]{background:var(--seal-soft);
+  box-shadow:inset 3px 0 0 var(--seal)}
+.fileitem .t{font-size:13.5px;font-weight:500}
+.fileitem .s{font-family:var(--d-mono);font-size:11px;color:var(--ink-3);display:block;margin-top:2px}
+.fileitem .dot{width:7px;height:7px;border-radius:50%;background:var(--rule-2);
+  margin-top:6px;flex:0 0 auto}
+.fileitem.unread .dot{background:var(--critical);box-shadow:0 0 0 3px var(--critical-soft)}
+.fileitem.locked{opacity:.42;cursor:not-allowed}
+.fileitem.locked:hover{background:none}
+
+/* calculation bench */
+.bench{flex:0 0 auto;border-top:2px solid var(--rule-2);background:var(--panel-2);padding:10px 12px 12px}
+.bench h3{margin:0 0 3px;font-family:var(--d-display);font-weight:600;font-size:12px;
+  letter-spacing:.11em;text-transform:uppercase}
+.bench .why{font-size:11.5px;color:var(--ink-2);margin:0 0 9px;line-height:1.4}
+.benchrow{display:flex;align-items:center;gap:7px;margin-bottom:6px}
+.benchrow span{flex:1;font-size:13px}
+.benchrow input{
+  width:76px;font:500 13px var(--d-mono);text-align:right;padding:5px 6px;
+  background:var(--panel);color:var(--ink);border:1px solid var(--rule-2);border-radius:0
+}
+.benchrow input.ok{border-color:var(--stable);background:var(--stable-soft)}
+.benchrow input.no{border-color:var(--critical);background:var(--critical-soft)}
+.benchrow .mark{width:14px;font-family:var(--d-mono);font-size:13px;text-align:center}
+.benchmsg{font-size:11.5px;line-height:1.4;margin-top:7px;color:var(--ink-2);min-height:16px}
+
+/* ── document pane ──────────────────────────────────────── */
+.docwrap{padding:18px 22px 28px;max-width:820px}
+.docmeta{border-bottom:2px solid var(--ink);padding-bottom:9px;margin-bottom:16px}
+.docmeta .from{font-family:var(--d-mono);font-size:11.5px;color:var(--ink-2);
+  display:flex;flex-wrap:wrap;gap:14px;margin-bottom:6px}
+.docmeta h1{font-family:var(--d-display);font-weight:700;font-size:23px;letter-spacing:.02em;
+  text-transform:uppercase;margin:0;text-wrap:balance;line-height:1.15}
+.stamp{
+  display:inline-block;font-family:var(--d-display);font-weight:600;font-size:11px;
+  letter-spacing:.13em;text-transform:uppercase;padding:2px 7px;border:1px solid currentColor
+}
+.stamp.crit{color:var(--critical)}
+.stamp.watch{color:var(--watch)}
+.docwrap p{margin:0 0 12px;max-width:66ch;font-size:14.5px}
+.docwrap h2{font-family:var(--d-display);font-weight:600;font-size:14px;letter-spacing:.1em;
+  text-transform:uppercase;margin:22px 0 8px;color:var(--ink-2);
+  border-bottom:1px solid var(--rule);padding-bottom:4px}
+.tablewrap{overflow-x:auto;margin:0 0 14px}
+table.data{border-collapse:collapse;width:100%;font-size:14px;background:var(--panel)}
+table.data th,table.data td{padding:7px 10px;border-bottom:1px solid var(--rule);text-align:right}
+table.data th{
+  font-family:var(--d-display);font-weight:600;font-size:11px;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--ink-2);border-bottom:1px solid var(--rule-2);
+  vertical-align:bottom;line-height:1.25
+}
+table.data th:first-child,table.data td:first-child{text-align:left}
+table.data td.n{font-family:var(--d-mono);font-variant-numeric:tabular-nums;font-weight:500}
+table.data tr.hi td{background:var(--seal-soft)}
+table.data tr.ref td{color:var(--ink-2);font-style:normal}
+table.data caption{caption-side:bottom;text-align:left;font-size:11.5px;color:var(--ink-3);
+  padding-top:6px;line-height:1.45}
+.flip td.n{transition:none}
+.note{border-left:3px solid var(--seal);background:var(--panel);padding:11px 14px;
+  margin:0 0 14px;font-size:13.5px;color:var(--ink-2);max-width:66ch}
+.note strong{color:var(--ink)}
+.note.crit{border-left-color:var(--critical)}
+/* distribution schematics */
+.patterns{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:14px}
+.pat{background:var(--panel);border:1px solid var(--rule);padding:9px}
+.pat svg{display:block;width:100%;height:88px;background:var(--sunk)}
+.pat .cap{font-family:var(--d-display);font-weight:600;font-size:12px;letter-spacing:.06em;
+  text-transform:uppercase;margin-top:7px}
+.pat .sub{font-family:var(--d-mono);font-size:11px;color:var(--ink-3);margin-top:1px}
+/* deliberation */
+.delib{background:var(--panel);border:1px solid var(--rule-2);border-top:3px solid var(--watch);
+  padding:14px 16px 16px;margin:22px 0 0}
+.delib h2{margin-top:0;border:0;padding:0;color:var(--watch)}
+.dq{display:flex;gap:10px;align-items:flex-start;margin-bottom:11px;font-size:14px;max-width:70ch}
+.dq input[type=checkbox]{margin-top:3px;width:16px;height:16px;accent-color:var(--seal);flex:0 0 auto}
+.dq label{cursor:pointer}
+.delib textarea{
+  width:100%;max-width:70ch;min-height:64px;font:400 14px/1.5 var(--d-body);
+  background:var(--ground);color:var(--ink);border:1px solid var(--rule-2);
+  border-bottom-width:2px;padding:8px 10px;border-radius:0;resize:vertical
+}
+.delib .req{font-size:13px;font-weight:500;margin:0 0 6px}
+
+/* ── allocation panel ───────────────────────────────────── */
+.allocbody{padding:10px 12px}
+.arow{margin-bottom:11px}
+.arow .top{display:flex;align-items:baseline;gap:6px;margin-bottom:4px}
+.arow .nm{flex:1;font-size:13.5px;font-weight:500}
+.arow .amt{font-family:var(--d-mono);font-size:13px;font-weight:600}
+.arow .bar{height:9px;background:var(--sunk);border:1px solid var(--rule);position:relative}
+.arow .bar i{display:block;height:100%;background:var(--seal);transition:width .18s ease}
+.arow .bar u{position:absolute;top:0;bottom:0;border-right:2px dashed var(--ink-3);opacity:.7}
+.steps{display:flex;gap:4px;margin-top:5px}
+.steps button{
+  flex:1;font:600 13px var(--d-mono);background:var(--panel-2);border:1px solid var(--rule-2);
+  padding:3px 0;border-radius:0
+}
+.steps button:hover:not([disabled]){background:var(--seal-soft);border-color:var(--seal)}
+.steps button[disabled]{opacity:.35;cursor:not-allowed}
+.tally{border-top:2px solid var(--rule-2);margin-top:4px;padding-top:9px}
+.tally .r{display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px}
+.tally .r .v{font-family:var(--d-mono);font-weight:600}
+.tally .r.bad .v{color:var(--critical)}
+.tally .r.good .v{color:var(--stable)}
+.gate{font-size:11.5px;color:var(--ink-2);line-height:1.4;margin:8px 0 9px;min-height:30px}
+.gate b{color:var(--critical)}
+.allocfoot{flex:0 0 auto;border-top:1px solid var(--rule);padding:10px 12px;background:var(--panel-2)}
+.allocfoot .btn{width:100%}
+.priorbox{border-top:1px solid var(--rule);margin-top:12px;padding-top:9px}
+.priorbox table{width:100%;border-collapse:collapse;font-size:11.5px}
+.priorbox td{padding:2px 0;color:var(--ink-2)}
+.priorbox td.n{font-family:var(--d-mono);text-align:right;font-variant-numeric:tabular-nums}
+.locked-note{font-size:12px;color:var(--stable);font-weight:500;text-align:center;padding:4px 0}
+
+/* ── memo ───────────────────────────────────────────────── */
+#memo{position:fixed;inset:0;z-index:70;background:var(--ground);overflow-y:auto;display:none}
+#memo.on{display:block}
+.memopage{max-width:760px;margin:0 auto;padding:34px 30px 60px}
+.memohead{border-bottom:3px double var(--ink);padding-bottom:12px;margin-bottom:20px}
+.memohead .org{font-family:var(--d-display);font-weight:700;font-size:19px;letter-spacing:.09em;
+  text-transform:uppercase}
+.memohead .sub{font-family:var(--d-display);font-size:11px;letter-spacing:.2em;
+  text-transform:uppercase;color:var(--seal);margin-top:2px}
+.memopage h1{font-family:var(--d-display);font-weight:700;font-size:25px;text-transform:uppercase;
+  letter-spacing:.02em;margin:20px 0 12px}
+.memogrid{display:grid;grid-template-columns:120px 1fr;gap:4px 14px;font-size:14px;margin-bottom:22px}
+.memogrid dt{font-family:var(--d-display);font-weight:600;font-size:11px;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--ink-2);padding-top:3px}
+.memogrid dd{margin:0;font-weight:500}
+.memopage h2{font-family:var(--d-display);font-weight:600;font-size:13px;letter-spacing:.1em;
+  text-transform:uppercase;border-bottom:1px solid var(--rule-2);padding-bottom:4px;margin:24px 0 10px}
+.qa{margin-bottom:14px}
+.qa .q{font-size:13px;color:var(--ink-2);margin-bottom:3px}
+.qa .a{font-size:14.5px;border-left:3px solid var(--seal);padding-left:11px;
+  white-space:pre-wrap;min-height:20px}
+.sig{margin-top:32px;display:grid;grid-template-columns:1fr 1fr;gap:26px}
+.sig div{border-top:1px solid var(--ink);padding-top:5px;font-size:12px;color:var(--ink-2)}
+.memoactions{display:flex;gap:10px;margin-top:30px}
+
+/* ── instructor notes ───────────────────────────────────── */
+#notes{position:fixed;inset:0;z-index:80;background:var(--ground);overflow-y:auto;display:none}
+#notes.on{display:block}
+.notespage{max-width:780px;margin:0 auto;padding:34px 30px 70px}
+.notespage h1{font-family:var(--d-display);font-weight:700;font-size:26px;text-transform:uppercase;
+  letter-spacing:.02em;margin:0 0 6px}
+.notespage h2{font-family:var(--d-display);font-weight:600;font-size:13px;letter-spacing:.1em;
+  text-transform:uppercase;border-bottom:1px solid var(--rule-2);padding-bottom:4px;margin:26px 0 10px}
+.notespage p,.notespage li{font-size:14.5px;max-width:70ch}
+.notespage li{margin-bottom:6px}
+.notespage code{font-family:var(--d-mono);font-size:13px;background:var(--panel-2);padding:1px 4px}
+
+@media (prefers-reduced-motion:reduce){
+  *{animation-duration:.01ms!important;transition-duration:.01ms!important}
+}
+@media print{
+  body{overflow:visible;background:#fff;color:#000}
+  #app,#login,.memoactions,#notes{display:none!important}
+  #memo{position:static;display:block!important;background:#fff}
+  .memopage{max-width:none;padding:0}
+}
+@media (max-width:1080px){
+  .main{grid-template-columns:196px minmax(0,1fr) 236px}
+  .docwrap{padding:14px 16px 24px}
+}
+</style>
+</head>
+<body>
+
+<!-- ══ LOGIN ══════════════════════════════════════════════ -->
+<div id="login">
+  <div class="boot">
+    <div class="seal">Global Food Security Unit</div>
+    <div class="sub">SecureDesk&nbsp;·&nbsp;v4.1</div>
+    <ul id="bootlines"></ul>
+    <div class="card" id="loginCard" style="opacity:0">
+      <h2>Analyst Sign-In</h2>
+      <p class="hint">This workstation is assigned to a two-analyst desk. Both names are
+        recorded on any recommendation issued from this terminal.</p>
+      <div class="fields">
+        <label class="f"><span class="lbl">Analyst 1</span>
+          <input type="text" id="n1" placeholder="Family name, given name" autocomplete="off"></label>
+        <label class="f"><span class="lbl">Analyst 2</span>
+          <input type="text" id="n2" placeholder="Family name, given name" autocomplete="off"></label>
+      </div>
+      <button class="btn" id="signin" disabled>Open Case File</button>
+      <button class="linkish" id="toNotes" style="margin-left:16px">Instructor notes</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ APP ════════════════════════════════════════════════ -->
+<div id="app">
+  <header class="topbar">
+    <div class="org">Global Food Security Unit</div>
+    <div class="meta" id="caseline">CASE 2.1-EGY</div>
+    <div class="spacer"></div>
+    <div class="meta" id="deskline"></div>
+    <div class="roundchip" id="roundchip">Round 1 of 4</div>
+  </header>
+
+  <div class="main">
+    <!-- rail -->
+    <section class="col rail" aria-label="Case file">
+      <div class="colhead"><span class="lbl">Case File</span>
+        <span class="spacer" style="flex:1"></span>
+        <span class="lbl" id="unreadflag" style="color:var(--critical)"></span>
+      </div>
+      <div class="scroll"><ul class="filelist" id="filelist"></ul></div>
+      <div class="bench" id="bench" hidden>
+        <h3>Calculation Bench</h3>
+        <p class="why" id="benchwhy"></p>
+        <div id="benchrows"></div>
+        <p class="benchmsg" id="benchmsg"></p>
+      </div>
+    </section>
+
+    <!-- document -->
+    <section class="col doc" aria-label="Document viewer">
+      <div class="colhead">
+        <span class="lbl">Viewing As</span>
+        <button class="btn sm ghost" id="roleBtn" style="padding:3px 10px">Data Desk</button>
+        <span style="flex:1"></span>
+        <span class="lbl" id="docidx"></span>
+      </div>
+      <div class="scroll"><div class="docwrap" id="docwrap"></div></div>
+    </section>
+
+    <!-- allocation -->
+    <aside class="col alloc" aria-label="Allocation panel">
+      <div class="colhead"><span class="lbl">Allocation</span></div>
+      <div class="scroll"><div class="allocbody" id="allocbody"></div></div>
+      <div class="allocfoot">
+        <p class="gate" id="gatemsg"></p>
+        <button class="btn" id="lockBtn" disabled>Lock Round 1</button>
+      </div>
+    </aside>
+  </div>
+</div>
+
+<!-- ══ MEMO ═══════════════════════════════════════════════ -->
+<div id="memo"><div class="memopage" id="memopage"></div></div>
+
+<!-- ══ NOTES ══════════════════════════════════════════════ -->
+<div id="notes"><div class="notespage" id="notespage"></div></div>
+
+<script>
+"use strict";
+/* ═══════════════════════════════════════════════════════════
+   DATA
+   Vintage: CIA World Factbook-era figures (2018–2022), chosen to
+   match the AMSCO Topic 2.1 table the students read. Egypt and
+   Bangladesh reproduce the textbook's published densities.
+   Farmer counts are estimates derived from agricultural share of
+   employment — see Instructor Notes.
+   ═════════════════════════════════════════════════════════ */
+const SQMI_PER_SQKM = 0.386102;
+const CANDIDATES = [
+  { id:"egypt", name:"Egypt", areaKm2:1001450, pop:87450000, arablePct:2.8,
+    farmers:6100000, gdpPc:3020, yield:3.1,
+    pattern:"linear",
+    profile:"Population is confined almost entirely to the Nile valley and delta — a ribbon of settlement a few miles wide crossing 700 miles of desert. Wheat is the staple; roughly half of it is imported. Urban expansion around Cairo is consuming delta farmland." },
+  { id:"yemen", name:"Yemen", areaKm2:527968, pop:30984689, arablePct:2.2,
+    farmers:2200000, gdpPc:650, yield:1.0,
+    pattern:"clustered",
+    profile:"Arid and mountainous, with settlement clustered in the western highlands where rainfall permits terraced farming. Groundwater is being drawn down faster than it recharges. Import-dependent for cereals, with port access disrupted." },
+  { id:"bangladesh", name:"Bangladesh", areaKm2:148460, pop:167030000, arablePct:59.0,
+    farmers:14576000, gdpPc:2500, yield:4.6,
+    pattern:"even",
+    profile:"A densely settled river delta with more arable land, proportionally, than any country in this case. Rice yields are high. The exposure is physical: cyclones, river flooding, and salt intrusion into coastal farmland." },
+  { id:"sudan", name:"Sudan", areaKm2:1861484, pop:47958856, arablePct:15.7,
+    farmers:5200000, gdpPc:750, yield:0.6,
+    pattern:"linear",
+    profile:"Large, sparsely settled, with substantial arable land along the Nile and in the rain-fed east. Population clusters on the river. Conflict since 2023 has displaced millions and collapsed the marketing system for grain that is, in places, still standing in the field." },
+  { id:"niger", name:"Niger", areaKm2:1267000, pop:27322555, arablePct:12.3,
+    farmers:5100000, gdpPc:590, yield:0.5,
+    pattern:"clustered",
+    profile:"Two-thirds Sahara. Nearly the whole population lives in the southern strip along the Niger River and the Nigerian border. Farming is rain-fed millet and sorghum at very low yields, with almost no irrigation and one harvest a year." }
+];
+/* AMSCO Topic 2.1 comparison table, p.59 — reference only, not candidates */
+const BENCH = [
+  { name:"Japan",        arith:962,   physio:8218,    agri:null, arable:11.7, gdpPc:39300 },
+  { name:"Netherlands",  arith:1044,  physio:3505,    agri:31,   arable:31.0, gdpPc:52400 },
+  { name:"Bangladesh",   arith:2914,  physio:4938,    agri:431,  arable:59.0, gdpPc:2500 },
+  { name:"Egypt",        arith:226,   physio:8078,    agri:null, arable:2.8,  gdpPc:3020 },
+  { name:"United States",arith:85,    physio:498,     agri:null, arable:16.8, gdpPc:65100 },
+  { name:"Iceland",      arith:8,     physio:687,     agri:null, arable:1.2,  gdpPc:54600 },
+  { name:"Singapore",    arith:19982, physio:2498197, agri:null, arable:0.8,  gdpPc:65200 }
+];
+CANDIDATES.forEach(c=>{
+  c.areaSqMi   = c.areaKm2 * SQMI_PER_SQKM;
+  c.arableSqMi = c.areaSqMi * c.arablePct/100;
+  c.arith      = c.pop / c.areaSqMi;
+  c.physio     = c.pop / c.arableSqMi;
+  c.agri       = c.farmers / c.arableSqMi;
+});
+const byId = id => CANDIDATES.find(c=>c.id===id);
+const fmt  = n => Math.round(n).toLocaleString("en-US");
+
+/* ═══ STATE ═══════════════════════════════════════════════ */
+const S = {
+  names:["",""], round:1, role:"data", openDoc:"brief01",
+  read:{}, alloc:{}, history:[], answers:{}, checks:{}, benchOk:false,
+  disbursed:null
+};
+CANDIDATES.forEach(c=>S.alloc[c.id]=0);
+
+const ROUNDS = {
+  1:{ budget:100, title:"Round 1 of 4", step:5,
+      gate:"Round 1 opens with distribution and arithmetic density only. Allocate the full fund, then lock.",
+      docs:["brief01","map"], open:"brief01", anchor:"map", bench:null,
+      checks:[
+        "Rank the five candidates by arithmetic density. Which looks most urgent? Which looks least?",
+        "Look at the settlement patterns. Two candidates have the same arithmetic density story but completely different distributions — find them."
+      ],
+      ask:"Before you see any other evidence: which candidate are you funding most heavily, and what is your reason?" },
+  2:{ budget:100, title:"Round 2 of 4", step:5,
+      gate:"The arable land survey has arrived. Complete the Calculation Bench to unlock it, then revise.",
+      docs:["brief01","map","arable","bench"], open:"arable", anchor:"arable", bench:["egypt","yemen","niger"],
+      checks:[
+        "Which candidate's ranking moved the most between Round 1 and Round 2? Nothing about the country changed — so what did?",
+        "Japan's physiological density is 8,218 — higher than Egypt's 8,078 — and Japan is not a candidate. Settle between you why not."
+      ],
+      ask:"Explain, in your own words, why arithmetic density gave you the wrong answer for Egypt." },
+  3:{ budget:100, title:"Round 3 of 4", step:5,
+      gate:"A data revision has been issued. Read it before you touch the sliders.",
+      docs:["brief01","map","arable","bench","revision"], open:"revision", anchor:"revision", bench:null,
+      checks:[
+        "Sudan's national arithmetic density did not change in the revision. Its distribution changed enormously. Which of the two does a national density figure actually report?",
+        "Does any density measure on this desk detect what is happening in Sudan? If not, what would?"
+      ],
+      ask:"Sudan's densities look unremarkable next to Egypt's. Argue for or against funding Sudan anyway." },
+  4:{ budget:45, title:"Final Round", step:5,
+      gate:"Fund reduced. Round 1 disbursements are already out the door and cannot be recalled.",
+      docs:["brief01","map","arable","bench","revision","annex","cut"], open:"annex", anchor:"cut", bench:null,
+      checks:[
+        "Niger's agricultural density is far lower than Bangladesh's. Does that mean Niger's farmers are better equipped? Check the yield column before you answer.",
+        "You cannot fund everyone now. Say out loud which candidate you are cutting, and be able to defend it."
+      ],
+      ask:"Final recommendation. Cite at least two different density measures, and name what you gave up." }
+};
+
+/* ═══ BOOT ════════════════════════════════════════════════ */
+const BOOT = [
+  ["Terminal","SecureDesk 4.1 — workstation GFSU-114"],
+  ["Case","2.1-EGY / Emergency Cereal Fund"],
+  ["Fund","USD 100,000,000 uncommitted"],
+  ["Status","<b>4 candidate countries pending review</b>"]
+];
+(function boot(){
+  const ul=document.getElementById("bootlines");
+  BOOT.forEach((l,i)=>{
+    const li=document.createElement("li");
+    li.style.animationDelay=(0.28+i*0.24)+"s";
+    li.innerHTML='<span style="color:var(--ink-3);width:78px;flex:0 0 auto">'+l[0]+'</span><span>'+l[1]+'</span>';
+    ul.appendChild(li);
+  });
+  const card=document.getElementById("loginCard");
+  card.style.transition="opacity .4s ease";
+  setTimeout(()=>{card.style.opacity="1";document.getElementById("n1").focus();},
+    (0.28+BOOT.length*0.24+0.25)*1000);
+})();
+const n1=document.getElementById("n1"), n2=document.getElementById("n2"),
+      signin=document.getElementById("signin");
+function chkNames(){ signin.disabled = !(n1.value.trim() && n2.value.trim()); }
+n1.addEventListener("input",chkNames); n2.addEventListener("input",chkNames);
+signin.addEventListener("click",()=>{
+  S.names=[n1.value.trim(),n2.value.trim()];
+  document.getElementById("login").style.display="none";
+  document.getElementById("app").classList.add("on");
+  document.getElementById("deskline").textContent=S.names[0]+"  ·  "+S.names[1];
+  enterRound(1);
+});
+
+/* ═══ DOCUMENTS ═══════════════════════════════════════════ */
+function dots(pattern){
+  const pts=[];
+  const R=(s)=>{let x=Math.sin(s*127.1)*43758.5;return x-Math.floor(x);};
+  for(let i=0;i<46;i++){
+    let x,y;
+    if(pattern==="linear"){ const t=i/45; x=14+t*72+ (R(i)*8-4); y=8+t*76+(R(i+90)*10-5); }
+    else if(pattern==="clustered"){
+      if(i<34){ x=52+(R(i)-0.5)*30; y=62+(R(i+40)-0.5)*26; }
+      else { x=8+R(i+7)*84; y=6+R(i+70)*80; }
+    } else { x=6+R(i)*88; y=6+R(i+55)*80; }
+    pts.push([Math.max(3,Math.min(97,x)),Math.max(4,Math.min(94,y))]);
+  }
+  return pts.map(p=>'<circle cx="'+p[0].toFixed(1)+'" cy="'+p[1].toFixed(1)+'" r="2.1" fill="var(--seal)" opacity=".85"/>').join("");
+}
+const PATNAME={linear:"Linear",clustered:"Clustered",even:"Dispersed"};
+
+const DOCS = {
+  brief01:{
+    title:"Operational Briefing 01", from:"Operations", time:"07:55", tag:null,
+    body(){
+      if(S.role==="country"){
+        return CANDIDATES.map(c=>
+          '<h2>'+c.name+'</h2><p>'+c.profile+'</p>').join("")+
+          '<div class="note"><strong>Country Desk note.</strong> Your partner at the Data Desk is holding the figures. '+
+          'Neither desk can rank these five alone — the profiles explain <em>why</em> a number looks the way it does, '+
+          'and the numbers say <em>how much</em>.</div>';
+      }
+      return '<p>Five countries have been referred to this desk for emergency cereal assistance. '+
+        'The fund is <span class="num">$100M</span>. Round 1 evidence is limited to total population, '+
+        'total land area, and settlement pattern.</p>'+
+        '<h2>Arithmetic Population Density</h2>'+
+        '<div class="tablewrap"><table class="data"><thead><tr>'+
+        '<th>Country</th><th>Population</th><th>Total area<br>(sq. mi.)</th>'+
+        '<th>Arithmetic density<br>(people / sq. mi.)</th><th>Pattern</th></tr></thead><tbody>'+
+        CANDIDATES.slice().sort((a,b)=>b.arith-a.arith).map(c=>
+          '<tr><td>'+c.name+'</td><td class="n">'+fmt(c.pop)+'</td><td class="n">'+fmt(c.areaSqMi)+
+          '</td><td class="n">'+fmt(c.arith)+'</td><td>'+PATNAME[c.pattern]+'</td></tr>').join("")+
+        '</tbody><caption>Arithmetic density = total population ÷ total land area. '+
+        'Figures reproduce the densities published in your reading.</caption></table></div>'+
+        '<div class="note"><strong>Reminder.</strong> Arithmetic density is an average across the whole '+
+        'territory. It reports how many people there are per square mile — not where in that territory '+
+        'any of them actually live.</div>';
+    }
+  },
+  map:{
+    title:"Settlement Distribution Survey", from:"Cartographic Section", time:"07:58", tag:null,
+    body(){
+      return '<p>Each panel shows the same quantity of population distributed across a schematic territory. '+
+        'The patterns are not decorative — they are the three distributions described in your reading.</p>'+
+        '<div class="patterns">'+CANDIDATES.map(c=>
+          '<div class="pat"><svg viewBox="0 0 100 100" role="img" aria-label="'+
+          PATNAME[c.pattern]+' settlement pattern, '+c.name+'">'+dots(c.pattern)+'</svg>'+
+          '<div class="cap">'+c.name+'</div><div class="sub">'+PATNAME[c.pattern]+
+          ' · '+fmt(c.arith)+'/sq mi</div></div>').join("")+'</div>'+
+        '<div class="note"><strong>Read this carefully.</strong> Sudan and Niger have almost identical '+
+        'arithmetic densities — <span class="num">'+fmt(byId("sudan").arith)+'</span> and '+
+        '<span class="num">'+fmt(byId("niger").arith)+'</span> per square mile. Both are among the '+
+        'emptiest countries on the referral list. Neither figure tells you anything about whether '+
+        'the land those people occupy can feed them.</div>';
+    }
+  },
+  arable:{
+    title:"Arable Land Survey", from:"Agricultural Statistics", time:"09:12", tag:["crit","Priority"],
+    body(){
+      const s=CANDIDATES.slice().sort((a,b)=>b.physio-a.physio);
+      return '<p><strong>Arable land</strong> is land suitable for growing crops. It has now been '+
+        'measured for all five candidates. Dividing population by <em>arable</em> land instead of '+
+        '<em>total</em> land gives <strong>physiological density</strong>.</p>'+
+        '<div class="tablewrap"><table class="data"><thead><tr>'+
+        '<th>Country</th><th>Arable<br>land</th><th>Arable area<br>(sq. mi.)</th>'+
+        '<th>Arithmetic<br>density</th><th>Physiological<br>density</th><th>Change in<br>rank</th>'+
+        '</tr></thead><tbody>'+
+        s.map(c=>{
+          const r1=CANDIDATES.slice().sort((a,b)=>b.arith-a.arith).findIndex(x=>x.id===c.id)+1;
+          const r2=s.findIndex(x=>x.id===c.id)+1;
+          const d=r1-r2, arrow = d>0?'▲ '+d : d<0?'▼ '+Math.abs(d) : '—';
+          const col = d>0?'var(--critical)':d<0?'var(--stable)':'var(--ink-3)';
+          return '<tr'+(c.id==="egypt"?' class="hi"':'')+'><td>'+c.name+'</td><td class="n">'+
+            c.arablePct.toFixed(1)+'%</td><td class="n">'+fmt(c.arableSqMi)+'</td><td class="n">'+
+            fmt(c.arith)+'</td><td class="n">'+fmt(c.physio)+'</td>'+
+            '<td class="n" style="color:'+col+'">'+arrow+'</td></tr>';
+        }).join("")+
+        '</tbody><caption>Physiological density = total population ÷ arable land. '+
+        'Rank change compares the physiological ranking against the Round 1 arithmetic ranking.</caption></table></div>'+
+        '<div class="note crit"><strong>Egypt.</strong> At <span class="num">'+fmt(byId("egypt").arith)+
+        '</span> people per square mile, Egypt was the <em>second-least</em> crowded country on your '+
+        'Round 1 list. Measured against the land that can actually grow food, it is '+
+        '<span class="num">'+fmt(byId("egypt").physio)+'</span> per square mile — the most crowded '+
+        'country in this case by a wide margin. Nothing about Egypt changed between Round 1 and now. '+
+        'Only the denominator did.</div>'+
+        '<div class="note"><strong>And note what did not happen.</strong> Sudan and Niger barely moved. '+
+        'Physiological density found Egypt and Yemen; it did not find them. Hold that thought.</div>';
+    }
+  },
+  bench:{
+    title:"Reference Bench — Comparator Countries", from:"Data Standards", time:"09:14", tag:null,
+    body(){
+      return '<p>These countries are <strong>not candidates</strong>. They are comparators, held on file '+
+        'so that a density figure can be interpreted against something. The values below are the ones '+
+        'published in your reading.</p>'+
+        '<div class="tablewrap"><table class="data"><thead><tr>'+
+        '<th>Country</th><th>Arithmetic<br>density</th><th>Physiological<br>density</th>'+
+        '<th>Agricultural<br>density</th><th>Arable<br>land</th></tr></thead><tbody>'+
+        BENCH.map(b=>'<tr class="ref"><td>'+b.name+'</td><td class="n">'+fmt(b.arith)+
+          '</td><td class="n">'+fmt(b.physio)+'</td><td class="n">'+
+          (b.agri==null?'—':fmt(b.agri))+'</td><td class="n">'+b.arable.toFixed(1)+'%</td></tr>').join("")+
+        '</tbody><caption>All densities per square mile. Reproduced from the Topic 2.1 comparison table.</caption></table></div>'+
+        '<div class="note"><strong>Two comparators are doing real work here.</strong><br>'+
+        '<span class="num">Japan · 8,218</span> — a physiological density higher than Egypt\'s, in a country '+
+        'that is not on anyone\'s referral list. <br>'+
+        '<span class="num">Netherlands · 3,505</span> — crowded on its farmland, and a net food '+
+        '<em>exporter</em>. Its agricultural density is <span class="num">31</span>; Bangladesh\'s is '+
+        '<span class="num">431</span>.</div>';
+    }
+  },
+  revision:{
+    title:"Data Revision Notice — Sudan", from:"Data Standards", time:"10:41", tag:["watch","Revision"],
+    body(){
+      const s=byId("sudan");
+      return '<div class="note crit"><strong>The Sudan figures on this desk are stale.</strong> '+
+        'The population total used in Rounds 1 and 2 is a pre-conflict estimate. Since 2023, armed '+
+        'conflict has displaced roughly a quarter of the country\'s people — the largest displacement '+
+        'crisis currently recorded anywhere.</div>'+
+        '<h2>What changed, and what did not</h2>'+
+        '<div class="tablewrap"><table class="data"><thead><tr><th>Measure</th>'+
+        '<th>Before revision</th><th>After revision</th></tr></thead><tbody>'+
+        '<tr><td>National population</td><td class="n">'+fmt(s.pop)+'</td><td class="n">'+fmt(s.pop)+'</td></tr>'+
+        '<tr><td>Arable land (sq. mi.)</td><td class="n">'+fmt(s.arableSqMi)+'</td><td class="n">'+fmt(s.arableSqMi)+'</td></tr>'+
+        '<tr class="hi"><td>Arithmetic density</td><td class="n">'+fmt(s.arith)+'</td><td class="n">'+fmt(s.arith)+'</td></tr>'+
+        '<tr class="hi"><td>Physiological density</td><td class="n">'+fmt(s.physio)+'</td><td class="n">'+fmt(s.physio)+'</td></tr>'+
+        '<tr><td>People displaced from home</td><td class="n">—</td><td class="n" style="color:var(--critical)">≈ 11,000,000</td></tr>'+
+        '<tr><td>Settlement pattern</td><td>Linear (Nile)</td><td style="color:var(--critical)">Linear + emergency concentrations</td></tr>'+
+        '</tbody><caption>National totals are unchanged. Every national density figure on this desk is '+
+        'therefore also unchanged.</caption></table></div>'+
+        '<h2>Why the densities did not move</h2>'+
+        '<p>Nobody was added to Sudan and nobody was subtracted. Eleven million people moved '+
+        '<em>within</em> the same national total, into receiving areas that were already settled. '+
+        'The country\'s <strong>distribution</strong> was redrawn. Its <strong>density</strong>, '+
+        'measured nationally, did not budge.</p>'+
+        '<div class="note"><strong>This is the limit of the measure.</strong> A national density is an '+
+        'average over the whole territory. It cannot see a redistribution inside that territory, and it '+
+        'cannot see a harvest that is standing in a field nobody can safely reach. Density told you '+
+        'about Egypt. It is telling you nothing at all about Sudan.</div>';
+    }
+  },
+  annex:{
+    title:"Economic Annex", from:"Country Analysis", time:"11:20", tag:["watch","Final round"],
+    body(){
+      if(S.role==="country"){
+        return '<h2>What the annex is for</h2>'+
+          '<p>Physiological density tells you how many mouths depend on each square mile of farmland. '+
+          'It does not tell you how much food that square mile actually produces, or whether the country '+
+          'can buy what it cannot grow. Two countries with identical physiological densities can be in '+
+          'entirely different situations — that is the whole reason Japan sits on the Reference Bench '+
+          'and not on the candidate list.</p>'+
+          '<h2>Reading agricultural density honestly</h2>'+
+          '<p>Agricultural density is farmers divided by arable land. A <em>low</em> figure is usually '+
+          'read as a sign of mechanisation — few farmers working a lot of land, as in the Netherlands '+
+          'at 31 per square mile. But a low figure can also mean a country simply has a great deal of '+
+          'poor land and few people on it. Niger and Sudan look "Dutch" on this measure and are nothing '+
+          'of the kind. The yield column is what separates the two cases.</p>';
+      }
+      const s=CANDIDATES.slice().sort((a,b)=>a.agri-b.agri);
+      return '<p>Farmer counts, output and income have been released for the final round.</p>'+
+        '<div class="tablewrap"><table class="data"><thead><tr>'+
+        '<th>Country</th><th>Farmers<br>(est.)</th><th>Agricultural<br>density</th>'+
+        '<th>Cereal yield<br>(t / hectare)</th><th>GDP per<br>capita (USD)</th>'+
+        '<th>Physiological<br>density</th></tr></thead><tbody>'+
+        s.map(c=>'<tr><td>'+c.name+'</td><td class="n">'+fmt(c.farmers)+'</td><td class="n">'+
+          fmt(c.agri)+'</td><td class="n">'+c.yield.toFixed(1)+'</td><td class="n">'+
+          fmt(c.gdpPc)+'</td><td class="n">'+fmt(c.physio)+'</td></tr>').join("")+
+        '<tr class="ref"><td>Netherlands <span class="lbl">ref</span></td><td class="n">—</td>'+
+        '<td class="n">31</td><td class="n">8.9</td><td class="n">52,400</td><td class="n">3,505</td></tr>'+
+        '<tr class="ref"><td>Japan <span class="lbl">ref</span></td><td class="n">—</td>'+
+        '<td class="n">—</td><td class="n">6.0</td><td class="n">39,300</td><td class="n">8,218</td></tr>'+
+        '</tbody><caption>Agricultural density = farmers ÷ arable land. Sorted lowest to highest. '+
+        'Farmer counts are estimates derived from agricultural share of employment.</caption></table></div>'+
+        '<div class="note crit"><strong>Careful with this table.</strong> Sorted by agricultural density '+
+        'alone, Sudan (<span class="num">'+fmt(byId("sudan").agri)+'</span>) and Niger '+
+        '(<span class="num">'+fmt(byId("niger").agri)+'</span>) sit closer to the Netherlands '+
+        '(<span class="num">31</span>) than to Bangladesh (<span class="num">431</span>). '+
+        'They are not mechanised. They have very little population spread across a great deal of '+
+        'marginal land. Read the yield column: the Netherlands gets '+
+        '<span class="num">8.9</span> tonnes per hectare, Niger gets <span class="num">0.5</span>.</div>'+
+        '<div class="note"><strong>And Japan.</strong> Physiological density <span class="num">8,218</span>, '+
+        'GDP per capita <span class="num">$39,300</span>. Japan cannot grow enough food either. '+
+        'It buys the difference. That is the column that decides who is on this list.</div>';
+    }
+  },
+  cut:{
+    title:"Fund Reduction — Immediate Effect", from:"HQ / Operations", time:"11:38", tag:["crit","Action required"],
+    body(){
+      const d=S.disbursed||{};
+      return '<div class="note crit"><strong>The Emergency Cereal Fund has been reduced.</strong> '+
+        'Headquarters has cut the uncommitted balance by 40 percent with immediate effect. '+
+        'Your Round 1 disbursement has already left the account and cannot be recalled.</div>'+
+        '<h2>Position of the fund</h2>'+
+        '<div class="tablewrap"><table class="data"><thead><tr><th>Line</th><th>USD (millions)</th></tr></thead><tbody>'+
+        '<tr><td>Original fund</td><td class="n">100</td></tr>'+
+        '<tr><td>Disbursed in Round 1 — unrecoverable</td><td class="n">25</td></tr>'+
+        '<tr><td>Balance before reduction</td><td class="n">75</td></tr>'+
+        '<tr><td>Reduction applied (40%)</td><td class="n" style="color:var(--critical)">−30</td></tr>'+
+        '<tr class="hi"><td><strong>Available this round</strong></td><td class="n"><strong>45</strong></td></tr>'+
+        '</tbody><caption>Round 1 disbursement was released in the proportions you locked at 08:20.</caption></table></div>'+
+        '<h2>Already spent, in your proportions</h2>'+
+        '<div class="tablewrap"><table class="data"><thead><tr><th>Country</th>'+
+        '<th>Round 1 share</th><th>Disbursed (USD m)</th></tr></thead><tbody>'+
+        CANDIDATES.map(c=>'<tr><td>'+c.name+'</td><td class="n">'+
+          ((S.history[0]?S.history[0].alloc[c.id]:0))+'%</td><td class="n">'+
+          (d[c.id]!=null?d[c.id].toFixed(2):"0.00")+'</td></tr>').join("")+
+        '</tbody><caption>Twenty-five million dollars, allocated on arithmetic density alone.</caption></table></div>'+
+        '<div class="note"><strong>You cannot fund everyone now.</strong> Spreading $45M across five '+
+        'countries is not a recommendation, it is an avoidance of one. Rank them, fund the ranking, '+
+        'and be able to say what you gave up and why.</div>';
+    }
+  }
+};
+const DOC_ORDER=["brief01","map","arable","bench","revision","annex","cut"];
+
+/* ═══ RENDER ══════════════════════════════════════════════ */
+function availableDocs(){ return ROUNDS[S.round].docs; }
+
+function renderRail(){
+  const ul=document.getElementById("filelist"); ul.innerHTML="";
+  let unread=0;
+  DOC_ORDER.forEach(id=>{
+    const d=DOCS[id], avail=availableDocs().includes(id);
+    const li=document.createElement("li");
+    const b=document.createElement("button");
+    b.className="fileitem"+(avail&&!S.read[id]?" unread":"")+(avail?"":" locked");
+    b.disabled=!avail;
+    if(avail&&!S.read[id]) unread++;
+    b.setAttribute("aria-current", S.openDoc===id ? "true":"false");
+    b.innerHTML='<span class="dot"></span><span><span class="t">'+d.title+'</span>'+
+      '<span class="s">'+(avail?d.from+" · "+d.time:"pending release")+'</span></span>';
+    b.addEventListener("click",()=>{S.openDoc=id;S.read[id]=true;renderRail();renderDoc();});
+    li.appendChild(b); ul.appendChild(li);
+  });
+  document.getElementById("unreadflag").textContent = unread? unread+" new" : "";
+}
+
+function renderDoc(){
+  const d=DOCS[S.openDoc];
+  const w=document.getElementById("docwrap");
+  const tag=d.tag?'<span class="stamp '+d.tag[0]+'">'+d.tag[1]+'</span>':"";
+  w.innerHTML='<div class="docmeta"><div class="from"><span>FROM: '+d.from+
+    '</span><span>TIME: '+d.time+'</span><span>CASE: 2.1-EGY</span>'+
+    (tag?'<span>'+tag+'</span>':'')+'</div><h1>'+d.title+'</h1></div>'+d.body()+
+    delibHTML();
+  document.getElementById("docidx").textContent =
+    (DOC_ORDER.filter(id=>availableDocs().includes(id)).indexOf(S.openDoc)+1)+
+    " / "+availableDocs().length;
+  wireDelib();
+  document.querySelector(".col.doc .scroll").scrollTop=0;
+  document.getElementById("roleBtn").textContent = S.role==="data"?"Data Desk":"Country Desk";
+}
+
+function delibHTML(){
+  const r=ROUNDS[S.round];
+  if(S.openDoc!==r.anchor) return "";
+  return '<div class="delib"><h2>Deliberation — both analysts</h2>'+
+    r.checks.map((q,i)=>'<div class="dq"><input type="checkbox" id="ck'+i+'"'+
+      (S.checks[S.round+"-"+i]?" checked":"")+'><label for="ck'+i+'">'+q+'</label></div>').join("")+
+    '<p class="req" style="margin-top:16px">'+r.ask+'</p>'+
+    '<textarea id="ans" placeholder="Both analysts must agree on this answer. It prints on your recommendation.">'+
+    (S.answers[S.round]||"")+'</textarea></div>';
+}
+function wireDelib(){
+  const r=ROUNDS[S.round];
+  r.checks.forEach((q,i)=>{
+    const el=document.getElementById("ck"+i); if(!el) return;
+    el.addEventListener("change",()=>{S.checks[S.round+"-"+i]=el.checked;updateGate();});
+  });
+  const ta=document.getElementById("ans");
+  if(ta) ta.addEventListener("input",()=>{S.answers[S.round]=ta.value;updateGate();});
+}
+
+/* ── calculation bench ── */
+function renderBench(){
+  const ids=ROUNDS[S.round].bench, box=document.getElementById("bench");
+  if(!ids){
+    box.hidden=true; S.benchOk=true;
+    document.getElementById("benchrows").innerHTML="";
+    document.getElementById("benchmsg").textContent="";
+    return;
+  }
+  box.hidden=false; S.benchOk=false;
+  document.getElementById("benchwhy").textContent =
+    "Compute physiological density for each. Population ÷ arable area, to the nearest whole number. "+
+    "The Arable Land Survey stays sealed until all three are right.";
+  const rows=document.getElementById("benchrows"); rows.innerHTML="";
+  ids.forEach(id=>{
+    const c=byId(id);
+    const row=document.createElement("div"); row.className="benchrow";
+    row.innerHTML='<span>'+c.name+'</span><input type="text" inputmode="numeric" '+
+      'aria-label="Physiological density for '+c.name+'" data-id="'+id+'">'+
+      '<span class="mark" data-mark="'+id+'"></span>';
+    rows.appendChild(row);
+  });
+  rows.querySelectorAll("input").forEach(inp=>inp.addEventListener("input",checkBench));
+  checkBench();
+}
+function checkBench(){
+  const ids=ROUNDS[S.round].bench; if(!ids) return;
+  let allOk=true, anyTyped=false, near=false;
+  ids.forEach(id=>{
+    const inp=document.querySelector('#benchrows input[data-id="'+id+'"]');
+    const mark=document.querySelector('[data-mark="'+id+'"]');
+    const target=byId(id).physio;
+    const v=parseFloat(inp.value.replace(/[, ]/g,""));
+    inp.classList.remove("ok","no"); mark.textContent="";
+    if(!inp.value.trim()){ allOk=false; return; }
+    anyTyped=true;
+    if(isFinite(v) && Math.abs(v-target)/target <= 0.03){
+      inp.classList.add("ok"); mark.textContent="✓"; mark.style.color="var(--stable)";
+    } else {
+      inp.classList.add("no"); mark.textContent="✗"; mark.style.color="var(--critical)";
+      allOk=false;
+      if(isFinite(v) && Math.abs(v-target)/target<=0.35) near=true;
+    }
+  });
+  S.benchOk=allOk;
+  const msg=document.getElementById("benchmsg");
+  msg.textContent = allOk ? "All three verified. Arable Land Survey released to the case file."
+    : near ? "Close. Check whether you divided by arable area or by total area."
+    : anyTyped ? "Check your arithmetic — arable area is in the survey, in square miles."
+    : "";
+  if(allOk && !availableDocs().includes("arable")){}
+  renderRail(); updateGate();
+}
+
+/* ── allocation ── */
+function renderAlloc(){
+  const r=ROUNDS[S.round], box=document.getElementById("allocbody");
+  const prior = S.history.length? S.history[S.history.length-1].alloc : null;
+  box.innerHTML =
+    '<p style="font-size:12px;color:var(--ink-2);margin:0 0 10px;line-height:1.45">'+
+    'Fund available: <span class="num" style="font-weight:600;color:var(--ink)">$'+r.budget+'M</span>'+
+    (S.round===4?' <span style="color:var(--critical)">(reduced)</span>':'')+'</p>'+
+    CANDIDATES.map(c=>{
+      const v=S.alloc[c.id], pct=r.budget?v/r.budget*100:0;
+      const pv = prior? prior[c.id] : null;
+      return '<div class="arow"><div class="top"><span class="nm">'+c.name+
+        '</span><span class="amt">$'+v+'M</span></div>'+
+        '<div class="bar"><i style="width:'+Math.min(100,pct)+'%"></i>'+
+        (pv!=null?'<u style="left:'+Math.min(100,pv)+'%"></u>':'')+'</div>'+
+        '<div class="steps"><button data-d="-'+r.step+'" data-c="'+c.id+'" aria-label="Decrease '+
+        c.name+'">−</button><button data-d="'+r.step+'" data-c="'+c.id+'" aria-label="Increase '+
+        c.name+'">+</button></div></div>';
+    }).join("")+
+    '<div class="tally"><div class="r" id="tallyRow"><span>Committed</span>'+
+    '<span class="v" id="tallyV"></span></div>'+
+    '<div class="r"><span>Remaining</span><span class="v" id="remV"></span></div></div>'+
+    (prior?'<div class="priorbox"><span class="lbl">Previous round (dashed)</span>'+
+      '<table>'+CANDIDATES.map(c=>'<tr><td>'+c.name+'</td><td class="n">'+prior[c.id]+
+      '%</td></tr>').join("")+'</table></div>':'');
+  box.querySelectorAll(".steps button").forEach(b=>b.addEventListener("click",()=>{
+    const id=b.dataset.c, d=parseInt(b.dataset.d,10);
+    const nv=S.alloc[id]+d;
+    const total=CANDIDATES.reduce((s,c)=>s+S.alloc[c.id],0);
+    if(nv<0) return;
+    if(total+d>ROUNDS[S.round].budget) return;
+    S.alloc[id]=nv; renderAlloc();
+  }));
+  updateTally();
+}
+function updateTally(){
+  const r=ROUNDS[S.round];
+  const t=CANDIDATES.reduce((s,c)=>s+S.alloc[c.id],0);
+  const row=document.getElementById("tallyRow");
+  document.getElementById("tallyV").textContent="$"+t+"M";
+  document.getElementById("remV").textContent="$"+(r.budget-t)+"M";
+  row.className="r "+(t===r.budget?"good":"bad");
+  // disable + when full
+  document.querySelectorAll('.steps button[data-d="'+r.step+'"]').forEach(b=>{
+    b.disabled = t+r.step > r.budget;
+  });
+  updateGate();
+}
+function updateGate(){
+  const r=ROUNDS[S.round];
+  const total=CANDIDATES.reduce((s,c)=>s+S.alloc[c.id],0);
+  const allChecked=r.checks.every((q,i)=>S.checks[S.round+"-"+i]);
+  const answered=(S.answers[S.round]||"").trim().length>=25;
+  const missing=[];
+  if(!S.benchOk) missing.push("Calculation Bench incomplete");
+  if(total!==r.budget) missing.push("fund not fully committed ($"+(r.budget-total)+"M left)");
+  if(!allChecked) missing.push("deliberation items not confirmed");
+  if(!answered) missing.push("written response too short");
+  if(!allChecked || !answered){
+    const a=DOCS[r.anchor];
+    if(S.openDoc!==r.anchor) missing.push("deliberation is on \u201c"+a.title+"\u201d");
+  }
+  const g=document.getElementById("gatemsg");
+  g.innerHTML = missing.length
+    ? r.gate+"<br><b>Blocked:</b> "+missing.join("; ")+"."
+    : "Ready to lock. Once locked, this round's allocation is recorded.";
+  const btn=document.getElementById("lockBtn");
+  btn.disabled = missing.length>0;
+  btn.textContent = S.round===4? "Issue Recommendation" : "Lock Round "+S.round;
+}
+
+/* ── round flow ── */
+function enterRound(n){
+  S.round=n;
+  const r=ROUNDS[n];
+  document.getElementById("roundchip").textContent=r.title;
+  // the round's headline document opens automatically; the deliberation
+  // gate lives on r.anchor, so every round forces at least two documents open.
+  S.openDoc = r.open; S.read[r.open] = true;
+  renderBench(); renderRail(); renderDoc(); renderAlloc();
+}
+document.getElementById("roleBtn").addEventListener("click",()=>{
+  S.role = S.role==="data" ? "country":"data"; renderDoc();
+});
+document.getElementById("lockBtn").addEventListener("click",()=>{
+  const snap={}; CANDIDATES.forEach(c=>snap[c.id]=S.alloc[c.id]);
+  S.history.push({round:S.round,budget:ROUNDS[S.round].budget,alloc:snap,
+    answer:S.answers[S.round]||""});
+  if(S.round===1){
+    S.disbursed={}; CANDIDATES.forEach(c=>S.disbursed[c.id]=snap[c.id]/100*25);
+  }
+  if(S.round===4){ showMemo(); return; }
+  const next=S.round+1;
+  if(ROUNDS[next].budget!==ROUNDS[S.round].budget){
+    const scale=ROUNDS[next].budget/ROUNDS[S.round].budget;
+    CANDIDATES.forEach(c=>S.alloc[c.id]=Math.round(snap[c.id]*scale/ROUNDS[next].step)*ROUNDS[next].step);
+    let t=CANDIDATES.reduce((s,c)=>s+S.alloc[c.id],0);
+    while(t>ROUNDS[next].budget){
+      const big=CANDIDATES.slice().sort((a,b)=>S.alloc[b.id]-S.alloc[a.id])[0];
+      S.alloc[big.id]-=ROUNDS[next].step; t-=ROUNDS[next].step;
+    }
+  }
+  enterRound(next);
+});
+
+/* ═══ MEMO ════════════════════════════════════════════════ */
+function showMemo(){
+  const final=S.history[3].alloc;
+  const p=document.getElementById("memopage");
+  p.innerHTML=
+    '<div class="memohead"><div class="org">Global Food Security Unit</div>'+
+    '<div class="sub">Emergency Cereal Fund · Case 2.1-EGY</div></div>'+
+    '<h1>Recommendation</h1>'+
+    '<dl class="memogrid">'+
+    '<dt>Analysts</dt><dd>'+S.names[0]+' &nbsp;·&nbsp; '+S.names[1]+'</dd>'+
+    '<dt>Case</dt><dd>2.1-EGY — Emergency Cereal Fund</dd>'+
+    '<dt>Fund</dt><dd>$100M original · $25M disbursed Round 1 · $45M allocated final round</dd>'+
+    '</dl>'+
+    '<h2>Final allocation</h2>'+
+    '<div class="tablewrap"><table class="data"><thead><tr><th>Country</th>'+
+    '<th>Final (USD m)</th><th>Arithmetic</th><th>Physiological</th><th>Agricultural</th>'+
+    '<th>Yield</th></tr></thead><tbody>'+
+    CANDIDATES.slice().sort((a,b)=>final[b.id]-final[a.id]).map(c=>
+      '<tr'+(final[c.id]>0?' class="hi"':'')+'><td>'+c.name+'</td><td class="n">'+final[c.id]+
+      '</td><td class="n">'+fmt(c.arith)+'</td><td class="n">'+fmt(c.physio)+
+      '</td><td class="n">'+fmt(c.agri)+'</td><td class="n">'+c.yield.toFixed(1)+'</td></tr>').join("")+
+    '</tbody></table></div>'+
+    '<h2>How the recommendation moved</h2>'+
+    '<div class="tablewrap"><table class="data"><thead><tr><th>Country</th>'+
+    S.history.map(h=>'<th>R'+h.round+'<br>($'+h.budget+'M)</th>').join("")+
+    '</tr></thead><tbody>'+
+    CANDIDATES.map(c=>'<tr><td>'+c.name+'</td>'+
+      S.history.map(h=>'<td class="n">'+h.alloc[c.id]+'</td>').join("")+'</tr>').join("")+
+    '</tbody><caption>Nothing about these five countries changed across the four rounds. '+
+    'Only the evidence available to this desk changed.</caption></table></div>'+
+    '<h2>Analyst reasoning</h2>'+
+    S.history.map(h=>'<div class="qa"><div class="q">Round '+h.round+' — '+
+      ROUNDS[h.round].ask+'</div><div class="a">'+
+      (h.answer.replace(/[<>&]/g,ch=>({"<":"&lt;",">":"&gt;","&":"&amp;"}[ch]))||"—")+
+      '</div></div>').join("")+
+    '<div class="sig"><div>'+S.names[0]+' — signature</div><div>'+S.names[1]+' — signature</div></div>'+
+    '<div class="memoactions">'+
+    '<button class="btn" id="printMemo">Print / Save PDF</button>'+
+    '<button class="btn ghost" id="backToCase">Back to case file</button></div>';
+  document.getElementById("memo").classList.add("on");
+  document.getElementById("printMemo").addEventListener("click",()=>window.print());
+  document.getElementById("backToCase").addEventListener("click",()=>
+    document.getElementById("memo").classList.remove("on"));
+}
+
+/* ═══ INSTRUCTOR NOTES ════════════════════════════════════ */
+document.getElementById("toNotes").addEventListener("click",()=>{
+  document.getElementById("notespage").innerHTML=NOTES_HTML;
+  document.getElementById("notes").classList.add("on");
+  document.getElementById("backNotes").addEventListener("click",()=>
+    document.getElementById("notes").classList.remove("on"));
+});
+const NOTES_HTML = `
+<h1>Instructor Notes</h1>
+<p style="color:var(--ink-2)">The Allocation — a decision lab for AMSCO Topic 2.1, Population Distribution.
+Students work in pairs at one machine. Runtime is about 35 minutes.</p>
+
+<h2>What it teaches</h2>
+<ul>
+<li>Arithmetic, physiological, and agricultural density, computed by hand and used to decide something.</li>
+<li>That each measure, used alone, produces a defensibly wrong answer.</li>
+<li>That distribution and density are different things — Round 3 is built entirely on this.</li>
+<li>Vocabulary in play: <em>population distribution, population density, arithmetic density,
+physiological density, agricultural density, arable, carrying capacity</em> (previewed).</li>
+</ul>
+
+<h2>Timing</h2>
+<ul>
+<li><strong>0–3</strong> Sign-in, Briefing 01, settlement patterns.</li>
+<li><strong>3–8</strong> Round 1 lock — arithmetic density only.</li>
+<li><strong>8–18</strong> Round 2 — Arable Land Survey. Calculation Bench. <em>The pivot.</em></li>
+<li><strong>18–25</strong> Round 3 — Sudan data revision.</li>
+<li><strong>25–33</strong> Final round — Economic Annex and the fund cut.</li>
+<li><strong>33–35</strong> Memo printed and signed.</li>
+</ul>
+<p>If you are running short, Round 3 is the one to compress — tell pairs to read the revision
+and re-lock without re-arguing. Do not compress Round 2.</p>
+
+<h2>Answer key — the reasoning you are listening for</h2>
+<ul>
+<li><strong>Round 1.</strong> Bangladesh dominates on arithmetic density (2,914). Egypt looks safe at
+226 — fourth of five. Most pairs underfund Egypt badly. That is the intended trap.</li>
+<li><strong>Round 2.</strong> Egypt is 2.8% arable, so its physiological density is ~8,077 — the highest
+in the case. Yemen (2.2% arable) is ~6,909. Bangladesh <em>falls</em> in the ranking despite the
+highest arithmetic density, because 59% of it is farmland. The sentence you want to hear:
+<em>"nothing about Egypt changed — we changed the denominator."</em></li>
+<li><strong>Japan.</strong> Physiological density 8,218, higher than Egypt's, and not a candidate.
+AMSCO answers it directly: a wealthy country imports the difference. Egypt cannot pay as easily.
+Density measures need, not capacity to meet it.</li>
+<li><strong>Round 3.</strong> Sudan's national densities do not move, because national totals did not
+move — 11 million people were redistributed <em>inside</em> the total. Density is an average over a
+territory and cannot see a redistribution within it. This is the p.58 A/B/C diagram, live.</li>
+<li><strong>Round 4 — the deliberate trap.</strong> Sorted by agricultural density, Sudan (~46) and
+Niger (~85) sit nearer the Netherlands (31) than Bangladesh (431). Students who learned
+"low agricultural density = mechanised and developed" will read this backwards. The resolution is
+the yield column: Netherlands 8.9 t/ha, Niger 0.5. Low agricultural density here means marginal land
+and few people, not tractors. Expect this to be the argument of the period — let it run.</li>
+</ul>
+
+<h2>Data note — please read before class</h2>
+<p>Figures are CIA World Factbook-era (2018–2022), chosen so Egypt and Bangladesh reproduce the
+densities printed in the AMSCO table. Egypt computes to 8,077/sq. mi. against the book's published
+8,078 — rounding in the source. The Calculation Bench accepts ±3% so this never blocks a pair.</p>
+<p><strong>Farmer counts are estimates</strong> derived from agricultural share of employment, not
+direct census counts, so agricultural densities are approximate. That is worth saying out loud —
+it is a real property of the measure, not a flaw in the lab.</p>
+<p>Sudan, Yemen, and Niger are in active humanitarian emergencies and the figures move. Check them
+against a current source before you run this, and tell students the numbers are real.</p>
+
+<h2>Tone</h2>
+<p>There is no score and no win screen, deliberately. The subject is famine risk affecting real
+people, and the lab is built to read as sober analysis rather than a game. If a pair asks
+"did we get it right?", the honest answer is that real analysts disagree about this and the
+defence is what is being assessed — which is what the memo captures.</p>
+
+<h2>Assessment</h2>
+<p>The printed memo carries both names, all four allocations, the density figures, and four written
+justifications. The most useful thing on it is the round-by-round table: a pair whose allocation
+never moved either reasoned exceptionally well in Round 1 or stopped reading after it, and the
+written answers tell you which.</p>
+
+<h2>Sources</h2>
+<ul>
+<li>Population, area, and arable land: CIA World Factbook country profiles (2018–2022 estimates).</li>
+<li>Comparison table densities: AMSCO <em>Human Geography: AP Edition</em>, Topic 2.1, p. 59.</li>
+<li>Sudan displacement scale: UN humanitarian reporting, 2023 onward.</li>
+</ul>
+<div class="memoactions"><button class="btn" id="backNotes">Back to sign-in</button></div>
+`;
+</script>
+</body>
+</html>
