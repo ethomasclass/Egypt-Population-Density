@@ -12,6 +12,29 @@ five countries. Evidence arrives in four rounds, and each round's new measure ch
 | 3 | Sudan data revision (displacement) | Distribution can be redrawn while density sits still |
 | 4 | Agricultural density, yields, income — and a 40% fund cut | Low agricultural density ≠ mechanised |
 
+**All three densities are computed by hand** on the Calculation Bench — arithmetic in Round 1
+(a warm-up that teaches the interface while stakes are low), physiological in Round 2, agricultural
+in Round 4. None of them is merely read off a table.
+
+## Maps
+
+- **Dot density maps** on real Natural Earth outlines, one dot = 500,000 people. Egypt's Nile
+  ribbon, Niger's empty north, Bangladesh's saturation — the three AMSCO distribution patterns
+  in real countries. Dot placement is a cartographic generalisation from city locations and
+  settlement corridors, not census data, and the page says so.
+- **Arable land figure** — each country's total area as a square with its arable share drawn to
+  scale inside.
+- **Density Comparison map series** — the same outlines shaded by whichever density you pick.
+  Egypt is among the palest on arithmetic and the darkest on physiological.
+
+## Outcomes
+
+No score, no simulated casualties, no "correct" answer revealed. Instead a **receipt** after every
+lock naming which density measure the allocation actually tracked (rank correlation against each),
+**The Mirror** on the memo showing those four receipts in a row, and a sourced **Case Closed**
+screen — including that the 2024 UN humanitarian appeal was funded at roughly 43%, making the
+lab's 40% cut gentler than reality.
+
 Pairs print a signed recommendation memo carrying both names, all four allocations, the density
 figures they computed, and four written justifications — the gradeable artifact.
 
