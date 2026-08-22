@@ -277,6 +277,9 @@ table.data caption{caption-side:bottom;text-align:left;font-size:11.5px;color:va
 .notespage li{margin-bottom:6px}
 .notespage code{font-family:var(--d-mono);font-size:13px;background:var(--panel-2);padding:1px 4px}
 
+.keyline{background:var(--seal-soft);border-left:3px solid var(--seal);padding:10px 14px;
+  margin:0 0 16px;font-size:15px;line-height:1.5;max-width:66ch}
+.keyline .lbl{display:block;color:var(--seal);margin-bottom:3px}
 /* ── the chain ──────────────────────────────────────────── */
 .chain{display:flex;flex-direction:column;gap:6px;margin:0 0 14px;max-width:68ch}
 .chain .ch{display:flex;gap:11px;align-items:flex-start;background:var(--panel);
@@ -552,23 +555,23 @@ const CANDIDATES = [
   { id:"egypt", name:"Egypt", areaKm2:1001450, pop:87450000, arablePct:2.8,
     farmers:6100000, gdpPc:3020, yield:6.5,
     pattern:"linear",
-    profile:"Population is confined almost entirely to the Nile valley and delta — a ribbon of settlement a few miles wide crossing 700 miles of desert. Wheat is the staple; roughly half of it is imported. Urban expansion around Cairo is consuming delta farmland." },
+    profile:"Almost everyone lives along the Nile or in its delta — a green ribbon a few miles wide crossing 700 miles of desert. Egypt buys about half its wheat from other countries, and Cairo keeps spreading onto delta farmland." },
   { id:"yemen", name:"Yemen", areaKm2:527968, pop:30984689, arablePct:2.2,
     farmers:2200000, gdpPc:650, yield:1.0,
     pattern:"clustered",
-    profile:"Arid and mountainous, with settlement clustered in the western highlands where rainfall permits terraced farming. Groundwater is being drawn down faster than it recharges. Import-dependent for cereals, with port access disrupted." },
+    profile:"Dry and mountainous. Most people live in the western highlands, where there is just enough rain to farm in terraces. Wells are running dry, and the ports that bring in grain keep closing." },
   { id:"bangladesh", name:"Bangladesh", areaKm2:148460, pop:167030000, arablePct:59.0,
     farmers:14576000, gdpPc:2500, yield:4.6,
     pattern:"even",
-    profile:"A densely settled river delta with more arable land, proportionally, than any country in this case. Rice yields are high. The exposure is physical: cyclones, river flooding, and salt intrusion into coastal farmland." },
+    profile:"A crowded river delta. Share for share, it has more farmland than any country here, and rice grows well. The danger is water: cyclones, floods, and salt creeping into coastal fields." },
   { id:"sudan", name:"Sudan", areaKm2:1861484, pop:47958856, arablePct:15.7,
     farmers:5200000, gdpPc:750, yield:0.6,
     pattern:"linear",
-    profile:"Large, sparsely settled, with substantial arable land along the Nile and in the rain-fed east. Population clusters on the river. Conflict since 2023 has displaced millions and collapsed the marketing system for grain that is, in places, still standing in the field." },
+    profile:"Big and mostly empty, with farmland along the Nile and in the rainy east. Fighting since 2023 has driven millions from their homes. In some places the grain is still standing in the fields with no one to harvest or sell it." },
   { id:"niger", name:"Niger", areaKm2:1267000, pop:27322555, arablePct:12.3,
     farmers:5100000, gdpPc:590, yield:0.5,
     pattern:"clustered",
-    profile:"Two-thirds Sahara. Nearly the whole population lives in the southern strip along the Niger River and the Nigerian border. Farming is rain-fed millet and sorghum at very low yields, with almost no irrigation and one harvest a year." }
+    profile:"Two-thirds Sahara. Nearly everyone lives in the southern strip along the river and the Nigerian border. Farmers grow millet and sorghum on rain alone, with almost no irrigation and one harvest a year." }
 ];
 /* AMSCO Topic 2.1 comparison table, p.59 — reference only, not candidates */
 const BENCH = [
@@ -594,7 +597,8 @@ CANDIDATES.forEach(c=>{
   //   acres of farmland per person = 640 / physiological density
   //   cereal grown per person      = acres per person x yield
   c.acres  = ACRES_PER_SQMI / c.physio;
-  c.food   = c.acres * (c.yield / ACRES_PER_HA) * 1000;   // kg per person per year
+  c.kgAcre = c.yield / ACRES_PER_HA * 1000;               // kg of cereal per acre
+  c.food   = c.acres * c.kgAcre;                          // kg per person per year
   c.cover  = c.food / RATION_KG;                          // share of a year's ration
 });
 const byId = id => CANDIDATES.find(c=>c.id===id);
@@ -613,29 +617,29 @@ CANDIDATES.forEach(c=>S.alloc[c.id]=0);
    what it says is a spoiler. */
 const CHAIN = [
   {n:1, round:1, bar:22, name:"Where the people are",
-   desc:"Population against land. How crowded a country is, and how crowded its farmland is."},
+   desc:"How crowded a country is, and how crowded its farmland is."},
   {n:2, round:2, bar:19, name:"Farmland per person",
-   desc:"The density figure turned upside down &mdash; acres of cropland standing behind each person."},
+   desc:"The density number flipped over: acres of farmland per person."},
   {n:3, round:4, bar:9,  name:"Yield",
-   desc:"What that land actually produces. Farmland per person &times; yield = food per person."},
+   desc:"How much food each acre actually grows."},
   {n:4, round:4, bar:14, name:"The gap",
-   desc:"Food grown against food needed. A country short of the line has to find the difference."},
+   desc:"Food grown against food needed."},
   {n:5, round:4, bar:17, name:"Ability to pay",
-   desc:"A rich country buys its way out. A poor one cannot. That is where need actually begins."}
+   desc:"A rich country buys the difference. A poor one cannot."}
 ];
 const MEASURES = {
-  arith:{ label:"Arithmetic density", formula:"population &divide; <em>total</em> land area",
-    ex:'Worked example — Bangladesh: <span class="num">167,030,000</span> &divide; <span class="num">57,320</span> = <span class="num">2,914</span>/sq&nbsp;mi.',
-    hint:"Total area is in the briefing table, in square miles." },
-  physio:{ label:"Physiological density", formula:"population &divide; <em>arable</em> land",
-    ex:'Worked example — Bangladesh: <span class="num">167,030,000</span> &divide; <span class="num">33,819</span> = <span class="num">4,939</span>/sq&nbsp;mi.',
-    hint:"Arable area is in the survey, in square miles — not total area." },
-  food:{ label:"Cereal grown per person", formula:"farmland per person &times; yield, in kg per person per year", tol:0.06,
-    ex:'Worked example — Sudan: <span class="num">1.51</span> acres &times; <span class="num">0.6</span> t/ha &divide; <span class="num">2.4711</span> &times; 1000 = <span class="num">366</span> kg.',
-    hint:"Convert the yield from tonnes per hectare to tonnes per acre first — divide by 2.4711." },
-  agri:{ label:"Agricultural density", formula:"<em>farmers</em> &divide; arable land",
-    ex:'Worked example — Egypt: <span class="num">6,100,000</span> farmers &divide; <span class="num">10,827</span> = <span class="num">563</span>/sq&nbsp;mi.',
-    hint:"Divide farmers by arable area — not total population, and not total area." }
+  arith:{ label:"Arithmetic density", formula:"people &divide; <em>total</em> land",
+    ex:'Example — Bangladesh: <span class="num">167,030,000</span> &divide; <span class="num">57,320</span> = <span class="num">2,914</span> per sq mi.',
+    hint:"total area is in the briefing table, in square miles." },
+  physio:{ label:"Physiological density", formula:"people &divide; <em>farmland</em>",
+    ex:'Example — Bangladesh: <span class="num">167,030,000</span> &divide; <span class="num">33,819</span> = <span class="num">4,939</span> per sq mi.',
+    hint:"use farmland area from the survey, not total area." },
+  food:{ label:"Cereal grown per person", formula:"acres per person &times; kg per acre", tol:0.06,
+    ex:'Example — Sudan: <span class="num">1.51</span> acres &times; <span class="num">243</span> kg = <span class="num">367</span> kg per person.',
+    hint:"multiply acres per person by kilograms per acre. One step." },
+  agri:{ label:"Agricultural density", formula:"<em>farmers</em> &divide; farmland",
+    ex:'Example — Egypt: <span class="num">6,100,000</span> farmers &divide; <span class="num">10,827</span> = <span class="num">563</span> per sq mi.',
+    hint:"divide farmers by farmland. Not total people, and not total area." }
 };
 const ROUNDS = {
   1:{ budget:100, title:"Round 1 of 4", step:5,
@@ -668,7 +672,7 @@ const ROUNDS = {
       ask:"Sudan's densities look unremarkable next to Egypt's. Argue for or against funding Sudan anyway." },
   4:{ budget:45, title:"Final Round", step:5,
       gate:"Steps 3 to 5 released, and the fund is cut. Work the bench, then decide who actually needs cereal.",
-      docs:["brief01","map","arable","bench","lens","revision","annex","balance","cut"], open:"balance", anchor:"cut", bench:{rows:[{id:"niger",m:"agri"},{id:"bangladesh",m:"agri"},{id:"yemen",m:"food"}]},
+      docs:["brief01","map","arable","bench","lens","revision","annex","balance","cut"], open:"balance", anchor:"cut", bench:{rows:[{id:"niger",m:"agri"},{id:"yemen",m:"food"}]},
       checks:[
         "Egypt and Yemen have almost the same physiological density and almost the same farmland per person. One grows 208 kg of cereal per head, the other 37. Say what makes the difference — and what that means for which of them needs cereal.",
         "Niger's agricultural density is far lower than Bangladesh's. Does that mean Niger's farmers are better equipped? Check the yield column before you answer.",
@@ -682,7 +686,7 @@ const ROUNDS = {
    Outlines: Natural Earth 1:110m admin-0, simplified and
    projected per country. Dots: one dot = 500,000 people,
    placed from real city locations and known settlement
-   corridors — a cartographic generalisation, not a census.
+   corridors — a cartographic generalization, not a census.
    ═════════════════════════════════════════════════════════ */
 const GEO = {"sudan":{"paths":["M18.7,89.8L12.5,85.6L12.1,83.8L13.0,79.1L9.8,75.5L9.2,71.6L7.2,69.9L7.1,66.5L6.0,64.3L4.0,64.6L6.0,60.1L5.4,57.7L7.2,55.9L6.0,54.6L10.1,46.7L14.9,47.1L14.7,21.7L21.1,21.7L21.1,10.2L87.4,10.2L89.2,15.8L88.0,16.9L88.8,22.8L90.8,29.8L96.0,33.3L93.2,36.6L89.1,37.6L87.3,39.3L84.3,51.7L84.9,54.0L84.0,59.0L81.8,64.7L78.4,67.5L75.5,74.3L72.8,75.9L71.2,82.0L71.2,87.2L71.2,82.7L70.4,82.6L69.8,77.7L66.9,75.4L66.3,71.3L66.9,67.0L64.4,66.6L64.0,67.9L60.6,68.2L62.0,69.9L62.4,73.3L56.6,80.7L53.7,81.3L49.0,77.9L46.9,79.1L46.3,80.8L43.5,81.9L43.3,83.1L37.7,83.1L36.9,81.9L32.9,81.7L30.9,82.7L29.4,82.2L25.5,77.2L21.5,78.0L18.5,85.8L14.9,87.6L18.7,89.8Z"],"dots":[[62.8,46.8],[62.9,47.9],[62.0,47.7],[64.5,47.0],[64.4,47.2],[63.7,47.2],[61.6,46.7],[63.8,46.8],[61.8,48.9],[62.1,48.1],[63.6,47.5],[63.8,48.3],[63.6,46.9],[19.9,66.5],[20.9,66.7],[88.9,24.5],[84.5,48.2],[50.8,61.0],[68.4,54.8],[78.7,55.5],[63.4,42.6],[51.6,24.0],[62.0,37.6],[54.1,17.2],[63.7,43.6],[60.1,35.1],[76.9,64.4],[65.1,60.7],[75.2,64.5],[75.8,60.0],[73.2,53.1],[71.0,52.4],[78.4,59.3],[79.3,59.1],[73.8,56.6],[67.2,60.4],[75.9,58.3],[78.9,56.5],[66.3,58.3],[68.2,63.2],[70.8,55.5],[75.4,47.4],[75.0,58.7],[67.4,64.2],[11.0,59.4],[6.9,54.4],[11.9,70.3],[10.8,63.0],[24.3,69.2],[10.2,53.6],[34.2,59.5],[28.1,65.2],[31.9,50.9],[26.4,62.3],[18.1,67.0],[20.6,66.8],[12.1,49.9],[19.4,75.3],[24.0,75.5],[23.0,62.9],[34.1,60.7],[17.5,60.1],[34.3,61.0],[20.4,75.1],[48.8,53.4],[48.6,67.3],[41.1,58.2],[54.4,63.8],[53.3,63.0],[42.4,54.0],[45.9,59.4],[58.3,58.0],[44.5,60.4],[39.9,56.2],[49.4,54.9],[45.8,69.2],[50.0,63.3],[52.1,61.0],[76.5,29.4],[22.0,70.8],[40.9,25.8],[22.4,50.6],[71.3,11.0],[76.7,52.2],[21.8,41.6],[35.7,25.4],[70.5,62.0],[13.4,52.4]]},"niger":{"paths":["M89.8,17.2L91.2,26.9L93.5,28.5L93.5,30.4L96.0,32.6L94.7,35.2L92.4,47.8L92.1,55.8L84.6,61.6L82.1,69.8L84.5,72.1L84.5,76.0L88.3,76.2L87.7,79.1L86.0,79.5L85.9,81.4L84.8,81.6L80.8,74.8L79.4,74.5L74.8,78.0L67.0,75.8L65.3,76.7L61.9,76.5L58.4,79.2L55.4,79.3L48.3,76.1L45.5,77.6L42.5,77.5L40.3,75.2L34.3,72.9L28.0,73.6L26.5,74.9L25.6,78.5L24.0,81.0L23.5,86.5L19.0,83.0L16.9,83.0L15.0,84.8L15.1,80.5L8.3,79.1L8.1,76.2L4.8,72.1L4.0,69.3L4.5,66.3L8.2,66.1L10.4,63.9L23.7,62.4L24.2,58.5L27.4,54.4L27.4,40.2L35.7,37.4L52.8,25.3L73.0,13.5L82.3,16.2L85.6,19.5L89.8,17.2Z"],"dots":[[14.1,74.1],[15.9,75.2],[16.2,75.1],[54.6,72.4],[44.3,75.5],[48.6,53.0],[33.7,65.4],[20.2,77.6],[12.4,67.5],[61.1,76.8],[18.0,66.6],[7.9,74.3],[41.5,73.1],[52.7,74.2],[42.1,67.7],[17.7,75.1],[7.4,70.3],[22.1,76.0],[47.5,69.7],[10.5,71.5],[74.6,73.0],[68.3,75.7],[69.2,68.8],[15.8,82.7],[44.9,68.9],[65.3,74.0],[16.6,73.8],[15.0,84.5],[58.1,75.5],[42.8,70.8],[13.3,77.0],[7.9,68.5],[10.6,79.4],[80.4,74.0],[21.1,80.3],[44.7,70.2],[45.9,68.9],[76.9,68.0],[57.2,77.4],[22.1,79.8],[15.2,70.8],[77.8,73.3],[16.3,76.7],[59.9,66.6],[40.9,72.2],[28.4,67.2],[14.4,68.0],[23.3,68.9],[63.7,69.9],[70.9,72.7],[46.9,75.8],[27.2,70.3],[26.4,59.3],[29.5,66.3],[23.1,64.4],[41.5,64.7],[69.3,18.0]]},"bangladesh":{"paths":["M83.5,74.2L83.2,85.6L78.1,83.2L79.1,96.0L74.9,87.7L71.3,71.9L65.2,62.6L51.7,62.0L53.0,68.6L48.5,77.4L42.2,74.2L40.1,77.1L30.3,73.9L28.1,60.8L23.0,48.8L25.5,39.2L16.5,35.0L19.7,29.2L28.9,23.2L18.3,14.8L23.5,4.0L35.1,10.9L42.0,11.7L43.3,22.7L70.7,24.7L79.2,27.4L72.4,40.9L65.9,41.8L61.4,50.9L69.4,59.1L71.8,49.0L75.8,48.9L83.5,74.2Z"],"dots":[[53.0,46.5],[52.5,41.5],[47.9,48.7],[51.4,42.7],[49.2,48.3],[52.1,50.8],[51.1,45.8],[45.4,46.2],[47.9,46.2],[46.5,44.6],[48.0,49.3],[45.9,47.4],[53.2,46.5],[51.0,43.6],[52.0,41.5],[50.2,47.9],[55.5,46.3],[50.8,46.5],[47.1,49.4],[49.4,45.5],[48.9,48.7],[45.4,46.2],[47.0,48.5],[52.6,45.4],[50.4,45.7],[48.5,43.8],[53.3,46.3],[55.1,45.0],[50.9,43.9],[49.7,44.7],[49.7,41.9],[50.5,41.5],[54.3,43.5],[52.9,42.9],[48.3,44.3],[49.4,47.1],[55.0,47.2],[53.2,42.0],[51.3,49.8],[50.8,50.3],[71.8,71.7],[73.0,70.7],[73.4,68.8],[71.3,71.9],[73.2,69.9],[71.1,68.7],[68.8,67.4],[70.9,68.9],[70.3,66.7],[73.5,67.7],[38.6,62.3],[35.5,62.2],[35.4,61.3],[24.8,38.2],[24.1,38.5],[70.6,30.4],[72.2,29.4],[34.7,15.9],[35.6,14.4],[50.5,61.8],[60.7,49.8],[49.6,32.9],[25.4,51.6],[49.3,30.8],[35.6,53.1],[40.6,40.5],[43.7,29.1],[44.4,61.4],[38.2,64.9],[73.7,70.2],[20.0,35.1],[37.6,24.9],[21.9,10.1],[44.0,39.4],[25.8,16.0],[44.3,70.1],[33.6,28.0],[60.2,58.6],[32.5,51.5],[53.4,54.3],[38.8,26.1],[45.1,45.6],[41.2,21.5],[74.8,60.8],[34.6,26.8],[49.9,43.2],[40.6,32.8],[76.6,60.6],[59.8,56.3],[37.4,21.1],[81.4,84.3],[45.0,25.7],[51.9,52.9],[46.6,24.0],[71.8,31.5],[58.5,47.4],[45.8,25.7],[79.7,78.4],[34.0,23.3],[37.7,18.8],[32.7,47.6],[44.1,36.2],[44.9,61.9],[49.5,32.0],[36.1,18.2],[29.9,25.5],[29.5,53.2],[34.3,14.2],[78.3,91.0],[44.3,30.7],[28.8,54.6],[60.2,47.7],[47.8,67.3],[67.3,61.0],[52.8,54.9],[38.2,28.2],[48.3,37.9],[33.1,38.5],[43.6,61.4],[40.8,65.2],[66.5,32.6],[78.4,68.6],[64.8,41.2],[23.7,30.2],[47.7,24.6],[78.9,68.1],[32.3,16.8],[47.4,23.9],[56.4,48.9],[43.8,36.2],[48.8,45.9],[27.3,56.8],[81.6,80.1],[25.4,53.6],[76.2,74.4],[52.6,24.8],[36.2,70.3],[34.4,72.6],[33.9,55.6],[35.4,12.5],[33.4,73.4],[51.8,36.2],[75.6,74.7],[46.5,61.6],[75.2,74.6],[28.4,40.5],[68.4,34.8],[71.4,58.4],[41.4,38.9],[49.7,51.5],[52.3,35.9],[43.2,71.1],[59.7,60.1],[70.5,59.5],[42.2,26.7],[36.7,19.0],[37.6,40.1],[64.2,32.7],[48.2,44.0],[26.5,6.7],[61.5,34.6],[38.2,60.1],[68.6,36.3],[37.2,73.1],[42.6,62.2],[47.7,54.9],[40.5,62.4],[25.2,11.2],[37.5,29.7],[25.3,14.5],[35.8,21.4],[69.8,32.9],[72.3,39.8],[33.4,66.2],[47.1,72.6],[56.2,39.3],[32.4,61.8],[29.8,58.9],[38.5,61.3],[46.9,48.0],[33.4,46.7],[73.9,28.1],[41.4,61.4],[31.9,39.4],[80.7,68.7],[51.1,67.5],[65.6,27.3],[31.4,69.2],[58.4,57.6],[49.2,39.6],[51.5,46.9],[44.2,68.3],[63.9,54.5],[55.3,40.6],[51.2,50.7],[77.6,86.3],[57.5,35.6],[29.7,58.0],[51.2,36.9],[59.9,57.8],[57.6,49.2],[48.5,46.5],[41.6,55.8],[77.6,88.6],[79.7,71.8],[62.0,32.9],[76.4,88.1],[77.8,78.3],[42.5,40.7],[41.9,17.6],[48.1,47.2],[80.5,74.5],[42.7,42.1],[73.9,25.9],[29.9,8.2],[52.3,34.9],[75.4,26.5],[64.2,60.7],[58.9,52.1],[39.0,72.0],[56.8,52.2],[35.8,27.4],[54.4,30.3],[35.7,55.9],[51.6,69.5],[66.4,57.2],[59.8,61.8],[36.8,56.6],[56.3,32.6],[55.5,48.0],[74.7,54.6],[47.5,32.6],[33.7,74.7],[38.9,36.9],[34.4,26.6],[71.9,39.2],[65.0,40.5],[39.9,74.3],[80.5,72.2],[27.5,35.5],[36.4,70.8],[23.8,12.2],[35.3,14.6],[73.7,55.8],[33.7,28.1],[73.6,31.5],[55.9,36.5],[73.2,34.6],[59.5,42.3],[33.9,31.5],[76.4,73.7],[43.3,30.4],[27.0,17.9],[76.4,65.8],[77.3,86.2],[29.9,64.0],[73.3,54.0],[30.2,52.2],[41.3,64.5],[82.8,79.1],[65.3,39.5],[21.5,11.8],[58.6,33.9],[36.8,59.2],[59.5,29.7],[69.8,58.0],[48.0,23.9],[31.9,31.2],[62.0,51.7],[40.5,35.8],[38.0,51.4],[76.6,81.9],[36.8,60.6],[52.1,64.2],[55.5,35.5],[36.1,40.0],[28.9,54.4],[43.5,46.8],[57.3,32.7],[71.9,52.5],[53.8,51.4],[56.7,28.4],[36.4,53.1],[40.6,36.5],[48.9,26.3],[22.8,35.4]]},"yemen":{"paths":["M86.3,20.8L96.0,42.2L89.7,44.6L87.8,51.8L65.0,59.9L57.2,66.3L50.7,66.3L45.6,70.0L30.5,72.8L24.9,78.2L11.7,78.7L9.4,73.4L9.7,68.4L6.5,59.0L4.0,55.3L5.8,54.8L4.9,50.7L5.9,48.9L5.5,44.9L9.4,42.0L8.5,38.2L10.8,33.7L14.4,36.1L26.9,35.1L40.3,36.4L42.5,39.5L46.6,38.0L52.9,28.4L61.0,24.3L86.3,20.8Z"],"dots":[[16.9,52.3],[15.9,54.8],[17.8,52.7],[18.1,53.5],[17.7,52.7],[16.7,54.0],[17.9,70.3],[16.0,69.5],[7.5,57.7],[8.1,57.9],[24.3,76.6],[24.2,76.6],[17.4,66.3],[19.1,66.2],[18.6,61.1],[62.1,61.0],[13.4,39.8],[6.9,50.9],[17.8,42.4],[16.7,52.9],[7.5,51.3],[21.5,61.4],[18.3,43.0],[4.4,55.4],[15.6,40.8],[14.0,57.2],[20.6,46.7],[12.4,49.9],[12.1,76.2],[17.7,54.2],[24.0,51.5],[7.1,46.8],[15.0,75.6],[13.5,41.6],[16.6,61.2],[23.8,43.1],[13.5,67.5],[15.4,60.2],[18.9,40.4],[11.3,47.8],[18.0,73.0],[19.3,66.8],[15.2,58.2],[17.4,41.8],[22.4,76.9],[21.8,50.3],[16.4,62.8],[10.3,53.9],[23.3,44.1],[16.2,65.8],[23.1,48.6],[13.4,72.1],[23.4,74.2],[35.1,61.2],[49.2,63.7],[56.4,64.9],[59.1,61.9],[24.7,75.5],[80.6,45.1],[39.6,57.2]]},"egypt":{"paths":["M96.0,90.6L6.3,90.6L6.3,29.3L4.0,22.5L5.9,17.2L4.8,13.6L7.5,9.5L17.6,9.4L35.9,15.5L44.8,10.3L51.5,9.7L56.8,10.7L58.9,14.9L60.7,12.2L72.6,14.6L76.3,12.5L81.3,27.1L75.5,41.3L73.7,42.7L67.8,36.2L62.4,24.1L61.6,24.9L64.8,33.8L75.1,55.5L87.1,74.3L85.6,75.8L85.9,81.3L96.0,90.6Z"],"dots":[[53.6,23.7],[51.4,21.9],[52.9,21.3],[54.8,20.5],[53.6,24.7],[53.2,21.6],[55.4,24.1],[55.0,20.5],[54.0,24.3],[53.8,24.3],[51.6,22.9],[51.9,22.3],[54.0,24.6],[54.9,22.6],[54.9,21.9],[52.8,24.9],[53.2,22.6],[52.1,21.3],[52.0,22.8],[54.9,21.9],[52.2,22.7],[54.2,23.7],[52.3,22.5],[53.6,21.7],[53.9,23.8],[52.1,23.2],[53.9,24.8],[53.5,20.1],[51.1,22.4],[52.3,21.2],[54.7,21.8],[54.8,22.2],[52.8,23.0],[54.1,20.2],[51.7,23.3],[54.0,20.1],[53.3,21.7],[51.6,21.9],[52.7,23.1],[54.3,23.7],[55.0,22.5],[53.9,22.4],[44.8,13.7],[42.3,14.0],[43.3,13.2],[43.1,11.8],[45.0,11.7],[42.7,12.7],[44.1,13.6],[44.3,11.1],[43.9,12.8],[43.2,12.8],[55.1,14.4],[53.4,14.1],[51.7,17.1],[52.3,15.7],[56.0,17.8],[55.4,18.9],[61.8,13.1],[61.6,13.1],[63.8,23.4],[63.5,23.0],[53.8,46.9],[53.0,46.3],[52.5,46.1],[56.9,52.5],[55.7,51.6],[63.6,59.2],[63.6,59.1],[66.8,72.8],[56.0,49.4],[54.9,49.3],[50.8,38.8],[60.1,55.2],[56.7,51.7],[57.8,51.9],[63.3,59.3],[51.8,29.1],[60.9,56.7],[55.5,50.4],[62.2,56.4],[51.2,31.5],[64.7,62.0],[56.7,50.2],[52.5,24.1],[63.7,63.5],[64.6,65.4],[52.8,23.6],[52.5,45.9],[51.2,30.2],[55.1,49.1],[50.7,38.9],[58.5,53.4],[52.2,24.0],[54.2,47.4],[50.3,39.0],[57.2,51.5],[64.5,68.9],[65.7,71.9],[63.7,61.9],[59.6,53.4],[51.8,27.1],[50.8,33.5],[50.1,39.9],[62.1,58.5],[58.0,52.0],[52.6,26.8],[50.7,39.0],[52.1,44.2],[52.0,31.1],[49.4,38.5],[55.4,50.0],[56.7,50.6],[60.6,55.4],[56.9,11.8],[58.1,21.2],[54.1,18.6],[54.7,18.5],[52.5,11.4],[53.8,18.8],[52.2,16.8],[59.2,18.4],[48.7,14.4],[45.7,15.0],[59.2,15.9],[48.1,16.4],[52.4,19.9],[45.7,20.1],[48.5,17.1],[48.4,18.9],[45.1,15.5],[57.4,14.8],[53.0,14.4],[47.0,13.7],[51.2,15.5],[53.7,16.4],[48.7,18.9],[47.3,15.9],[49.9,15.1],[43.9,17.7],[57.7,18.9],[52.7,16.1],[48.3,10.7],[48.5,13.1],[46.3,20.8],[57.9,16.7],[44.7,17.3],[50.9,13.5],[45.5,19.1],[46.2,17.8],[49.4,14.1],[53.7,12.2],[57.1,15.9],[55.7,13.4],[56.1,16.3],[56.5,13.8],[58.6,20.2],[57.9,21.5],[56.1,15.1],[51.8,11.0],[53.0,17.0],[56.4,11.9],[53.6,17.4],[51.1,16.5],[55.5,18.3],[50.1,15.4],[50.0,18.0],[56.5,12.2],[51.8,16.7],[46.7,18.2],[17.3,43.9],[57.5,83.5]]}};
 const DOT_VALUE = 500000;
@@ -799,17 +803,17 @@ const PATNAME={linear:"Linear",clustered:"Clustered",even:"Dispersed"};
 const DOCS = {
   brief01:{
     title:"Operational Briefing 01", from:"Operations", time:"07:55", tag:null,
+    key:"You have $100M and five countries. Right now you only know how many people live in each one and how much land it has.",
     body(){
       if(S.role==="country"){
         return CANDIDATES.map(c=>
           '<h2>'+c.name+'</h2><p>'+c.profile+'</p>').join("")+
-          '<div class="note"><strong>Country Desk note.</strong> '+(S.solo
-            ? 'The Data Desk view holds the figures. Neither view can rank these five alone — the profiles explain <em>why</em> a number looks the way it does, and the numbers say <em>how much</em>. Switch between them freely.'
-            : 'Your partner at the Data Desk is holding the figures. Neither desk can rank these five alone — the profiles explain <em>why</em> a number looks the way it does, and the numbers say <em>how much</em>.')+'</div>';
+          '<div class="note"><strong>Country Desk.</strong> '+(S.solo
+            ? 'The Data Desk view has the numbers. You need both: these notes say <em>why</em> a number looks the way it does, the numbers say <em>how much</em>.'
+            : 'Your partner has the numbers. You need both: these notes say <em>why</em> a number looks the way it does, the numbers say <em>how much</em>.')+'</div>';
       }
-      return '<p>Five countries have been referred to this desk for emergency cereal assistance. '+
-        'The fund is <span class="num">$100M</span>. Round 1 evidence is limited to total population, '+
-        'total land area, and settlement pattern.</p>'+
+      return '<p>Five countries have asked for help buying cereal. This round you get three '+
+        'things: how many people live in each, how big it is, and where those people live.</p>'+
         '<h2>Arithmetic Population Density</h2>'+
         '<div class="tablewrap"><table class="data"><thead><tr>'+
         '<th>Country</th><th>Population</th><th>Total area<br>(sq. mi.)</th>'+
@@ -819,16 +823,13 @@ const DOCS = {
           '</td><td class="n">'+fmt(c.arith)+'</td><td>'+PATNAME[c.pattern]+'</td></tr>').join("")+
         '</tbody><caption>Arithmetic density = total population ÷ total land area. '+
         'Figures reproduce the densities published in your reading.</caption></table></div>'+
-        '<div class="note"><strong>Reminder.</strong> Arithmetic density is an average across the whole '+
-        'territory. It reports how many people there are per square mile — not where in that territory '+
-        'any of them actually live.</div>'+
-        '<h2>Why this desk measures density at all</h2>'+
-        '<p>A fair question, and you should ask it before you move a single dollar. '+
-        '<strong>Density on its own is not a measure of hunger.</strong> Japan is one of the most '+
-        'crowded countries on earth per acre of farmland and nobody there is short of food.</p>'+
-        '<p>Density is where this desk <em>starts</em>. Five steps stand between a density figure '+
-        'and a defensible decision about cereal. Analysis releases them one at a time, and you are '+
-        'expected to decide on what you have at each stage.</p>'+
+        '<div class="note"><strong>Watch out.</strong> Arithmetic density is an average. It tells '+
+        'you how many people per square mile — not where they live.</div>'+
+        '<h2>Why does this desk care about density?</h2>'+
+        '<p>Ask it before you spend a dollar. <strong>Density by itself does not measure '+
+        'hunger.</strong> Japan has more crowded farmland than Egypt, and nobody there goes hungry.</p>'+
+        '<p>Density is where this desk <em>starts</em>. Five steps stand between a density number '+
+        'and a good decision. You get them one at a time.</p>'+
         '<div class="chain">'+CHAIN.map(st=>{
           const open = S.round>=st.round;
           return '<div class="ch'+(open?'':' sealed')+'"><span class="i">'+st.n+'</span><span>'+
@@ -836,33 +837,31 @@ const DOCS = {
                   : '<b><span class="redact">'+"\u2588".repeat(st.bar)+'</span></b>'+
                     '<span class="pend">Released in a later round</span>')+'</span></div>';
         }).join("")+'</div>'+
-        '<div class="note"><strong>Standing instruction.</strong> Before you lock any round, say out '+
-        'loud what the evidence in front of you <em>cannot</em> tell you. An analyst who names the '+
-        'gap before the next step arrives is doing the job correctly. Write it down — a prediction '+
-        'you got right is worth more on your record than a safe answer.</div>';
+        '<div class="note"><strong>Standing order.</strong> Before you lock a round, say what your '+
+        'evidence <em>cannot</em> tell you yet. A good guess beats a safe answer here.</div>';
     }
   },
   map:{
     title:"Settlement Distribution Survey", from:"Cartographic Section", time:"07:58", tag:null,
+    key:"People do not spread out evenly. Egypt's live in a line along the Nile. Niger's live in a strip in the south.",
     body(){
-      return '<p>Dot density maps for the five candidates. Each dot represents '+
-        '<span class="num">500,000</span> people, placed where people actually live rather than '+
-        'spread evenly across the territory. The maps are drawn to the same height, not to the '+
-        'same scale — compare the <em>patterns</em>, not the sizes.</p>'+
+      return '<p>Each dot is <span class="num">500,000</span> people, placed where people really '+
+        'live. The maps are drawn the same height, not the same scale. Compare the <em>shapes</em>, '+
+        'not the sizes.</p>'+
         '<div class="maplegend"><span class="lbl">Key</span>'+
         '<span><svg width="13" height="13" style="vertical-align:-2px"><circle cx="6.5" cy="6.5" r="3" '+
         'fill="var(--seal)"/></svg> = 500,000 people</span>'+
-        '<span style="color:var(--ink-3)">Outlines: Natural Earth 1:110m. Dot placement is a '+
-        'cartographic generalisation from city locations and settlement corridors.</span></div>'+
+        '<span style="color:var(--ink-3)">Country outlines are real. Dot placement is an estimate, '+
+        'built from where the cities and farming valleys are.</span></div>'+
         '<div class="mapgrid">'+CANDIDATES.map(c=>
           '<div class="mapcell">'+dotMap(c.id,{label:c.name})+
           '<div class="nm">'+c.name+'</div><div class="sub">'+PATNAME[c.pattern]+
           ' &middot; '+fmt(c.arith)+'/sq mi</div></div>').join("")+'</div>'+
-        '<h2>The same three patterns as your reading</h2>'+
-        '<p>Egypt is the textbook <strong>linear</strong> case — settlement strung along the Nile '+
-        'and spread across its delta, with essentially nobody in the desert either side. Niger is '+
-        '<strong>clustered</strong> into its southern strip, two-thirds of the country empty above it. '+
-        'Bangladesh is <strong>dispersed</strong>: people nearly everywhere, and a great many of them.</p>'+
+        '<h2>The three patterns from your reading</h2>'+
+        '<p>Egypt is <strong>linear</strong>: people strung along the river, desert on both sides. '+
+        'Niger is <strong>clustered</strong> in its southern strip, with two-thirds of the country '+
+        'empty. Bangladesh is <strong>dispersed</strong>: people almost everywhere, and a lot of '+
+        'them.</p>'+
         '<div class="note"><strong>Read this carefully.</strong> Sudan and Niger have almost identical '+
         'arithmetic densities — <span class="num">'+fmt(byId("sudan").arith)+'</span> and '+
         '<span class="num">'+fmt(byId("niger").arith)+'</span> per square mile. Both are among the '+
@@ -872,21 +871,22 @@ const DOCS = {
   },
   arable:{
     title:"Arable Land Survey", from:"Agricultural Statistics", time:"09:12", tag:["crit","Priority"],
+    key:"Egypt looked almost empty last round. Measured against land that grows food, it is the most crowded country here.",
     body(){
       const s=CANDIDATES.slice().sort((a,b)=>b.physio-a.physio);
       return '<p><strong>Arable land</strong> is land suitable for growing crops. It has now been '+
-        'measured for all five candidates. Each square below is one country\'s <em>total</em> area; '+
-        'the shaded block is the share of it that can grow food, drawn to scale.</p>'+
+        'measured for all five. Each square below is one country\'s <em>whole</em> area. The dark '+
+        'block is the part that grows food, drawn to scale.</p>'+
         '<div class="arablefig">'+CANDIDATES.slice().sort((a,b)=>a.arablePct-b.arablePct).map(c=>{
           const side=Math.sqrt(c.arablePct/100)*100;
           return '<div class="cell"><div class="box"><i style="width:'+side.toFixed(1)+
             '%;height:'+side.toFixed(1)+'%"></i></div><div class="cap">'+c.name+'</div>'+
             '<div class="val">'+c.arablePct.toFixed(1)+'% arable<br>'+fmt(c.arableSqMi)+' sq mi</div></div>';
         }).join("")+'</div>'+
-        '<p style="color:var(--ink-2);font-size:13.5px">Egypt\'s block is the whole of its farmland. '+
+        '<p style="color:var(--ink-2);font-size:13.5px">Egypt\'s little block is all of its farmland. '+
         'Everyone in the country eats from it.</p>'+
         '<p>'+
-        'Dividing population by <em>arable</em> land instead of <em>total</em> land gives '+
+        'Divide people by <em>farmland</em> instead of <em>total land</em> and you get '+
         '<strong>physiological density</strong>.</p>'+
         '<div class="tablewrap"><table class="data"><thead><tr>'+
         '<th>Country</th><th>Arable<br>land</th><th>Arable area<br>(sq. mi.)</th>'+
@@ -906,32 +906,28 @@ const DOCS = {
         }).join("")+
         '</tbody><caption>Physiological density = total population ÷ arable land. '+
         'Rank change compares the physiological ranking against the Round 1 arithmetic ranking.</caption></table></div>'+
-        '<div class="note crit"><strong>Egypt.</strong> At <span class="num">'+fmt(byId("egypt").arith)+
-        '</span> people per square mile, Egypt was the <em>second-least</em> crowded country on your '+
-        'Round 1 list. Measured against the land that can actually grow food, it is '+
-        '<span class="num">'+fmt(byId("egypt").physio)+'</span> per square mile — the most crowded '+
-        'country in this case by a wide margin. Nothing about Egypt changed between Round 1 and now. '+
-        'Only the denominator did.</div>'+
-        '<div class="note"><strong>Farmland per person is the same number upside down.</strong> '+
-        'Egypt\'s <span class="num">'+fmt(byId("egypt").physio)+'</span> people per square mile of '+
-        'farmland means <span class="num">'+byId("egypt").acres.toFixed(2)+'</span> acres each — '+
-        'about a tennis court. Sudan has <span class="num">'+byId("sudan").acres.toFixed(2)+
-        '</span> acres per person, roughly a football pitch.</div>'+
-        '<div class="note"><strong>And note what did not happen.</strong> Sudan and Niger barely moved. '+
-        'Physiological density found Egypt and Yemen; it did not find them.</div>'+
-        '<div class="note crit"><strong>What this does not tell you.</strong> Pressure on the land is '+
-        'not the same as hunger. Egypt and Yemen now sit within '+
-        '<span class="num">'+fmt(byId("egypt").physio-byId("yemen").physio)+'</span> of each other on '+
-        'this measure. Whether that means the same thing in both countries depends on what their land '+
-        'produces — <strong>step 3 of the chain, and this desk does not have it yet.</strong></div>';
+        '<div class="note crit"><strong>Look at Egypt.</strong> Last round it was '+
+        '<span class="num">'+fmt(byId("egypt").arith)+'</span> people per square mile — the second '+
+        'emptiest country on your list. Against land that actually grows food it is '+
+        '<span class="num">'+fmt(byId("egypt").physio)+'</span>, the most crowded here by far. '+
+        'Egypt did not change. The bottom of the fraction did.</div>'+
+        '<div class="note"><strong>Now flip it over.</strong> '+fmt(byId("egypt").physio)+' people '+
+        'per square mile of farmland is the same as <span class="num">'+
+        byId("egypt").acres.toFixed(2)+'</span> acres each — about a tennis court. Sudan has '+
+        '<span class="num">'+byId("sudan").acres.toFixed(2)+'</span> acres per person, about a '+
+        'football field.</div>'+
+        '<div class="note crit"><strong>Careful.</strong> Crowded farmland is not the same thing as '+
+        'hungry people. Egypt and Yemen are now close on this measure. Whether that means the same '+
+        'thing in both depends on what their land grows — <strong>step 3, and you do not have it '+
+        'yet.</strong></div>';
     }
   },
   bench:{
     title:"Reference Bench — Comparator Countries", from:"Data Standards", time:"09:14", tag:null,
+    key:"Japan has more crowded farmland than Egypt and needs no food aid. Crowded does not mean hungry.",
     body(){
-      return '<p>These countries are <strong>not candidates</strong>. They are comparators, held on file '+
-        'so that a density figure can be interpreted against something. The values below are the ones '+
-        'published in your reading.</p>'+
+      return '<p>These countries are <strong>not asking for help</strong>. They are here so you have '+
+        'something to compare against. These are the numbers from your reading.</p>'+
         '<div class="tablewrap"><table class="data"><thead><tr>'+
         '<th>Country</th><th>Arithmetic<br>density</th><th>Physiological<br>density</th>'+
         '<th>Agricultural<br>density</th><th>Arable<br>land</th></tr></thead><tbody>'+
@@ -939,24 +935,25 @@ const DOCS = {
           '</td><td class="n">'+fmt(b.physio)+'</td><td class="n">'+
           (b.agri==null?'—':fmt(b.agri))+'</td><td class="n">'+b.arable.toFixed(1)+'%</td></tr>').join("")+
         '</tbody><caption>All densities per square mile. Reproduced from the Topic 2.1 comparison table.</caption></table></div>'+
-        '<div class="note"><strong>Two comparators are doing real work here.</strong><br>'+
-        '<span class="num">Japan · 8,218</span> — a physiological density higher than Egypt\'s, in a country '+
-        'that is not on anyone\'s referral list. <br>'+
-        '<span class="num">Netherlands · 3,505</span> — crowded on its farmland, and a net food '+
-        '<em>exporter</em>. Its agricultural density is <span class="num">31</span>; Bangladesh\'s is '+
-        '<span class="num">431</span>.</div>';
+        '<div class="note"><strong>Two of these matter.</strong><br>'+
+        '<span class="num">Japan &middot; 8,218</span> — more crowded on its farmland than Egypt, and '+
+        'nobody there needs food aid.<br>'+
+        '<span class="num">Netherlands &middot; 3,505</span> — crowded too, and it <em>sells</em> food '+
+        'to other countries. Its agricultural density is <span class="num">31</span>. Bangladesh\'s '+
+        'is <span class="num">431</span>.</div>';
     }
   },
   lens:{
     title:"Density Comparison — Map Series", from:"Cartographic Section", time:"09:20", tag:null,
+    key:"Same five countries, same outlines. Change the measure and the map tells a different story.",
     body(){
       const avail = S.round>=4 ? ["arith","physio","agri"] : ["arith","physio"];
       if(avail.indexOf(S.lens)<0) S.lens=avail[0];
       const key=S.lens, vals=CANDIDATES.map(c=>c[key]);
       const sorted=CANDIDATES.slice().sort((a,b)=>b[key]-a[key]);
       const NAME={arith:"Arithmetic",physio:"Physiological",agri:"Agricultural"};
-      return '<p>The same five countries, shaded by whichever density you select. '+
-        'The outlines do not change. The story does.</p>'+
+      return '<p>The same five countries. Pick a measure and the shading changes. The map does '+
+        'not.</p>'+
         '<div class="lenstoggle" role="group" aria-label="Density measure">'+
         avail.map(k=>'<button class="lensbtn'+(k===key?' on':'')+'" data-lens="'+k+'">'+
           NAME[k]+'</button>').join("")+'</div>'+
@@ -967,41 +964,41 @@ const DOCS = {
           '<div class="mapcell">'+dotMap(c.id,{label:c.name,dots:false,fill:rampStep(c[key],vals)})+
           '<div class="nm">'+c.name+'</div><div class="sub">'+fmt(c[key])+'/sq mi</div></div>').join("")+
         '</div>'+
-        '<div class="note"><strong>Switch between the two and watch Egypt.</strong> On arithmetic '+
-        'density it is one of the palest countries on the page. On physiological density it is the '+
-        'darkest. Same country, same map, same day — a different denominator.</div>'+
-        (S.round>=4?'<div class="note"><strong>On agricultural density</strong> the ranking scrambles '+
-          'again, and this time the dark countries are not the ones in trouble. Check the Economic '+
-          'Annex before you read anything into it.</div>':'');
+        '<div class="note"><strong>Switch back and forth and watch Egypt.</strong> On arithmetic '+
+        'density it is one of the palest countries here. On physiological density it is the darkest. '+
+        'Same country, same day. Different bottom of the fraction.</div>'+
+        (S.round>=4?'<div class="note"><strong>On agricultural density</strong> the order scrambles '+
+          'again — and this time the dark countries are not the ones in trouble. Read the Farm Report '+
+          'before you trust it.</div>':'');
     }
   },
   balance:{
-    title:"Food Balance — Land, Yield and the Gap", from:"Food Security Analysis", time:"11:05",
+    title:"Food Balance — What the Land Grows", from:"Food Security Analysis", time:"11:05",
     tag:["crit","Step 3-5"], time2:null,
+    key:"Egypt and Yemen have almost the same density. Egypt grows six times more food per person.",
     body(){
       const s=CANDIDATES.slice().sort((a,b)=>a.cover-b.cover);
       const max=Math.max.apply(null,CANDIDATES.map(c=>c.cover));
-      return '<p>Steps 3 to 5 of the chain. Farmland per person is only half the story — what '+
-        'matters is what that land <em>produces</em>, and whether the country can buy whatever it '+
-        'falls short of.</p>'+
+      return '<p>Steps 3, 4 and 5. Acres per person is only half the story. What matters is what '+
+        'that land <em>grows</em>.</p>'+
         '<div class="note"><strong>The whole chain in one line:</strong><br>'+
-        '<span class="num">farmland per person &times; yield = cereal grown per person</span><br>'+
-        'and farmland per person is just <span class="num">640 &divide; physiological density</span>. '+
-        'Physiological density is literally the denominator of a country\'s food supply.</div>'+
+        '<span class="num">acres per person &times; kg per acre = kg of food per person</span><br>'+
+        'And acres per person is just <span class="num">640 &divide; physiological density</span>. '+
+        'Density is the bottom of the fraction that feeds a country.</div>'+
         '<div class="tablewrap"><table class="data"><thead><tr>'+
-        '<th>Country</th><th>Physiological<br>density</th><th>Farmland/person<br>(acres)</th>'+
-        '<th>Cereal yield<br>(t / hectare)</th><th>Cereal grown<br>(kg / person / yr)</th>'+
-        '<th>GDP per<br>capita (USD)</th></tr></thead><tbody>'+
+        '<th>Country</th><th>Physiological<br>density</th><th>Acres per<br>person</th>'+
+        '<th>Cereal grown<br>(kg per acre)</th><th>Food per person<br>(kg per year)</th>'+
+        '<th>Income per<br>person (USD)</th></tr></thead><tbody>'+
         s.map(c=>'<tr'+(c.cover<1?' class="hi"':'')+'><td>'+c.name+'</td><td class="n">'+
           fmt(c.physio)+'</td><td class="n">'+c.acres.toFixed(2)+'</td><td class="n">'+
-          c.yield.toFixed(1)+'</td><td class="n">'+fmt(c.food)+'</td><td class="n">'+
+          fmt(c.kgAcre)+'</td><td class="n">'+fmt(c.food)+'</td><td class="n">'+
           fmt(c.gdpPc)+'</td></tr>').join("")+
-        '</tbody><caption>Yields are national cereal averages. Egypt\'s are among the highest in '+
-        'the world — the Nile valley is irrigated and double-cropped.</caption></table></div>'+
+        '</tbody><caption>Multiply the two middle columns to get the fourth. Egypt grows more per '+
+        'acre than almost anywhere on earth — the Nile valley is watered and cropped twice a '+
+        'year.</caption></table></div>'+
         '<h2>Against a year of rations</h2>'+
-        '<p>The line is <span class="num">'+RATION_KG+' kg</span> of cereal per person per year — '+
-        'roughly 400 grams a day, the cereal component of a standard emergency ration and the basis '+
-        'of the 2,100 kcal per day humanitarian planning figure.</p>'+
+        '<p>The line is <span class="num">'+RATION_KG+' kg</span> of grain per person per year. '+
+        'That is about 400 grams a day — the grain part of a standard emergency ration.</p>'+
         '<div class="rations">'+s.map(c=>{
           const w=Math.min(100,c.cover/max*100), line=1/max*100;
           const col=c.cover<1?"var(--critical)":c.cover<1.5?"var(--watch)":"var(--stable)";
@@ -1010,33 +1007,28 @@ const DOCS = {
             '<u style="left:'+line.toFixed(1)+'%">'+(c===s[0]?'<span>ration line</span>':'')+'</u></span>'+
             '<span class="vv">'+fmt(c.food)+' kg &middot; '+Math.round(c.cover*100)+'%</span></div>';
         }).join("")+'</div>'+
-        '<div class="note crit"><strong>Read Egypt and Yemen together.</strong> Their physiological '+
-        'densities are '+fmt(byId("egypt").physio)+' and '+fmt(byId("yemen").physio)+' — nearly the '+
-        'same. Their farmland per person is '+byId("egypt").acres.toFixed(2)+' and '+
-        byId("yemen").acres.toFixed(2)+' acres — nearly the same. And they grow '+
-        '<span class="num">'+fmt(byId("egypt").food)+' kg</span> and '+
-        '<span class="num">'+fmt(byId("yemen").food)+' kg</span> per person. '+
-        'Egypt farms its sliver of land at close to the highest yields on earth. Yemen does not. '+
-        'The density was identical; the outcome is not.</div>'+
-        '<div class="note"><strong>And Sudan grows the most of anyone here.</strong> '+
-        '<span class="num">'+fmt(byId("sudan").food)+' kg</span> per person, well clear of the line — '+
-        'while its people are displaced away from the fields that grew it. Production is not access. '+
-        'Round 3 said the same thing about density; it is true of this table too.</div>'+
-        '<div class="note"><strong>Step 5.</strong> Egypt is short of nothing on this table, and is '+
-        'still the largest wheat importer on earth, because its people eat far more than a bare '+
-        'ration and its own land cannot stretch further. It buys the difference — at '+
-        '$'+fmt(byId("egypt").gdpPc)+' per head, with difficulty. Yemen, at $'+
-        fmt(byId("yemen").gdpPc)+', cannot buy anything at all.</div>';
+        '<div class="note crit"><strong>Now put Egypt and Yemen side by side.</strong> Almost the '+
+        'same density. Almost the same acres per person. And Egypt grows '+
+        '<span class="num">'+fmt(byId("egypt").food)+' kg</span> per person while Yemen grows '+
+        '<span class="num">'+fmt(byId("yemen").food)+'</span>. Egypt farms its sliver of land about '+
+        'as well as anyone on earth. Yemen cannot. Same density, opposite result.</div>'+
+        '<div class="note"><strong>Sudan grows the most of anyone here</strong> — and its people have '+
+        'been driven away from those fields. Growing food is not the same as reaching it.</div>'+
+        '<div class="note"><strong>Step 5: can they buy the rest?</strong> Egypt still buys more wheat '+
+        'than any country on earth, because people eat more than a bare ration. At $'+
+        fmt(byId("egypt").gdpPc)+' a head it manages, barely. Yemen, at $'+fmt(byId("yemen").gdpPc)+
+        ', cannot.</div>';
     }
   },
   revision:{
     title:"Data Revision Notice — Sudan", from:"Data Standards", time:"10:41", tag:["watch","Revision"],
+    key:"Eleven million people in Sudan have moved. Not one of Sudan's density numbers changed.",
     body(){
       const s=byId("sudan");
-      return '<div class="note crit"><strong>The Sudan figures on this desk are stale.</strong> '+
-        'The population total used in Rounds 1 and 2 is a pre-conflict estimate. Since 2023, armed '+
-        'conflict has displaced roughly a quarter of the country\'s people — the largest displacement '+
-        'crisis currently recorded anywhere.</div>'+
+      return '<div class="note crit"><strong>Your Sudan numbers are out of date.</strong> '+
+        'The population total you used in Rounds 1 and 2 was counted before the fighting started. '+
+        'Since 2023, about a quarter of the country has been driven from home — the biggest such '+
+        'crisis anywhere in the world right now.</div>'+
         '<h2>What changed, and what did not</h2>'+
         '<div class="tablewrap"><table class="data"><thead><tr><th>Measure</th>'+
         '<th>Before revision</th><th>After revision</th></tr></thead><tbody>'+
@@ -1048,86 +1040,85 @@ const DOCS = {
         '<tr><td>Settlement pattern</td><td>Linear (Nile)</td><td style="color:var(--critical)">Linear + emergency concentrations</td></tr>'+
         '</tbody><caption>National totals are unchanged. Every national density figure on this desk is '+
         'therefore also unchanged.</caption></table></div>'+
-        '<h2>Why the densities did not move</h2>'+
-        '<p>Nobody was added to Sudan and nobody was subtracted. Eleven million people moved '+
-        '<em>within</em> the same national total, into receiving areas that were already settled. '+
-        'The country\'s <strong>distribution</strong> was redrawn. Its <strong>density</strong>, '+
-        'measured nationally, did not budge.</p>'+
-        '<div class="note"><strong>This is the limit of the measure.</strong> A national density is an '+
-        'average over the whole territory. It cannot see a redistribution inside that territory, and it '+
-        'cannot see a harvest that is standing in a field nobody can safely reach. Density told you '+
-        'about Egypt. It is telling you nothing at all about Sudan.</div>';
+        '<h2>Why did the densities not move?</h2>'+
+        '<p>Nobody was added and nobody was taken away. Eleven million people moved <em>inside</em> '+
+        'the same country, into towns that were already full. Sudan\'s <strong>distribution</strong> '+
+        'changed completely. Its <strong>density</strong> did not move at all.</p>'+
+        '<div class="note"><strong>This is where the measure runs out.</strong> One average for a '+
+        'whole country cannot see people moving around inside it. Density found Egypt for you. It is '+
+        'telling you nothing about Sudan.</div>';
     }
   },
   annex:{
-    title:"Economic Annex", from:"Country Analysis", time:"11:20", tag:["watch","Final round"],
+    title:"Farm Report", from:"Country Analysis", time:"11:20", tag:["watch","Final round"],
+    key:"A low agricultural density can mean tractors. It can also mean bad land and hardly any farmers.",
     body(){
       if(S.role==="country"){
-        return '<h2>What the annex is for</h2>'+
-          '<p>Physiological density tells you how many mouths depend on each square mile of farmland. '+
-          'It does not tell you how much food that square mile actually produces, or whether the country '+
-          'can buy what it cannot grow. Two countries with identical physiological densities can be in '+
-          'entirely different situations — that is the whole reason Japan sits on the Reference Bench '+
-          'and not on the candidate list.</p>'+
-          '<h2>Reading agricultural density honestly</h2>'+
-          '<p>Agricultural density is farmers divided by arable land. A <em>low</em> figure is usually '+
-          'read as a sign of mechanisation — few farmers working a lot of land, as in the Netherlands '+
-          'at 31 per square mile. But a low figure can also mean a country simply has a great deal of '+
-          'poor land and few people on it. Niger and Sudan look "Dutch" on this measure and are nothing '+
-          'of the kind. The yield column is what separates the two cases.</p>';
+        return '<h2>What this report is for</h2>'+
+          '<p>Physiological density tells you how many people depend on each square mile of farmland. '+
+          'It does not tell you how much food that land grows, or whether the country can buy what it '+
+          'cannot grow. Two countries with the same density can be in completely different '+
+          'situations. That is why Japan is on the Reference Bench and not on your list.</p>'+
+          '<h2>Reading agricultural density carefully</h2>'+
+          '<p>Agricultural density is farmers divided by farmland. A <em>low</em> number usually means '+
+          'machines — a few farmers working a lot of land, like the Netherlands at 31 per square mile.</p>'+
+          '<p>But a low number can also mean something else: poor land, and hardly anyone on it. '+
+          'Niger and Sudan look Dutch on this measure and are nothing like it. Check how much each '+
+          'acre grows before you decide.</p>';
       }
       const s=CANDIDATES.slice().sort((a,b)=>a.agri-b.agri);
       return '<p>Farmer counts, output and income have been released for the final round.</p>'+
         '<div class="tablewrap"><table class="data"><thead><tr>'+
-        '<th>Country</th><th>Farmers<br>(est.)</th><th>Agricultural<br>density</th>'+
-        '<th>Cereal yield<br>(t / hectare)</th><th>GDP per<br>capita (USD)</th>'+
+        '<th>Country</th><th>Farmers</th><th>Agricultural<br>density</th>'+
+        '<th>Cereal grown<br>(kg per acre)</th><th>Income per<br>person (USD)</th>'+
         '<th>Physiological<br>density</th></tr></thead><tbody>'+
         s.map(c=>'<tr><td>'+c.name+'</td><td class="n">'+fmt(c.farmers)+'</td><td class="n">'+
-          fmt(c.agri)+'</td><td class="n">'+c.yield.toFixed(1)+'</td><td class="n">'+
+          fmt(c.agri)+'</td><td class="n">'+fmt(c.kgAcre)+'</td><td class="n">'+
           fmt(c.gdpPc)+'</td><td class="n">'+fmt(c.physio)+'</td></tr>').join("")+
         '<tr class="ref"><td>Netherlands <span class="lbl">ref</span></td><td class="n">—</td>'+
-        '<td class="n">31</td><td class="n">8.9</td><td class="n">52,400</td><td class="n">3,505</td></tr>'+
+        '<td class="n">31</td><td class="n">3,602</td><td class="n">52,400</td><td class="n">3,505</td></tr>'+
         '<tr class="ref"><td>Japan <span class="lbl">ref</span></td><td class="n">—</td>'+
-        '<td class="n">—</td><td class="n">6.0</td><td class="n">39,300</td><td class="n">8,218</td></tr>'+
-        '</tbody><caption>Agricultural density = farmers ÷ arable land. Sorted lowest to highest. '+
-        'Farmer counts are estimates derived from agricultural share of employment.</caption></table></div>'+
-        '<div class="note crit"><strong>Careful with this table.</strong> Sorted by agricultural density '+
+        '<td class="n">—</td><td class="n">2,428</td><td class="n">39,300</td><td class="n">8,218</td></tr>'+
+        '</tbody><caption>Agricultural density = farmers ÷ farmland, lowest first. '+
+        'Farmer counts are estimates.</caption></table></div>'+
+        '<div class="note crit"><strong>Careful with this table.</strong> By agricultural density '+
         'alone, Sudan (<span class="num">'+fmt(byId("sudan").agri)+'</span>) and Niger '+
-        '(<span class="num">'+fmt(byId("niger").agri)+'</span>) sit closer to the Netherlands '+
+        '(<span class="num">'+fmt(byId("niger").agri)+'</span>) look closer to the Netherlands '+
         '(<span class="num">31</span>) than to Bangladesh (<span class="num">431</span>). '+
-        'They are not mechanised. They have very little population spread across a great deal of '+
-        'marginal land. Read the yield column: the Netherlands gets '+
-        '<span class="num">8.9</span> tonnes per hectare, Niger gets <span class="num">0.5</span>.</div>'+
-        '<div class="note"><strong>And Japan.</strong> Physiological density <span class="num">8,218</span>, '+
-        'GDP per capita <span class="num">$39,300</span>. Japan cannot grow enough food either. '+
-        'It buys the difference. That is the column that decides who is on this list.</div>';
+        'They do not have machines. They have poor land and few people on it. Look at the kg per '+
+        'acre column: the Netherlands grows <span class="num">3,602</span>, Niger grows '+
+        '<span class="num">'+fmt(byId("niger").kgAcre)+'</span>.</div>'+
+        '<div class="note"><strong>And Japan.</strong> Very crowded farmland, and '+
+        '<span class="num">$39,300</span> per person. Japan cannot grow enough food either. It buys '+
+        'the rest. That last column is what keeps Japan off your list.</div>';
     }
   },
   cut:{
     title:"Fund Reduction — Immediate Effect", from:"HQ / Operations", time:"11:38", tag:["crit","Action required"],
+    key:"Your fund just shrank. Round 1's money is already spent. You cannot pay for everyone.",
     body(){
       const d=S.disbursed||{};
-      return '<div class="note crit"><strong>The Emergency Cereal Fund has been reduced.</strong> '+
-        'Headquarters has cut the uncommitted balance by 40 percent with immediate effect. '+
-        'Your Round 1 disbursement has already left the account and cannot be recalled.</div>'+
+      return '<div class="note crit"><strong>Headquarters has cut your fund.</strong> '+
+        'What you have not spent yet is down 40 percent, starting now. The money you sent out in '+
+        'Round 1 is already gone and cannot be pulled back.</div>'+
         '<h2>Position of the fund</h2>'+
         '<div class="tablewrap"><table class="data"><thead><tr><th>Line</th><th>USD (millions)</th></tr></thead><tbody>'+
         '<tr><td>Original fund</td><td class="n">100</td></tr>'+
-        '<tr><td>Disbursed in Round 1 — unrecoverable</td><td class="n">25</td></tr>'+
+        '<tr><td>Sent out in Round 1 — cannot be recalled</td><td class="n">25</td></tr>'+
         '<tr><td>Balance before reduction</td><td class="n">75</td></tr>'+
         '<tr><td>Reduction applied (40%)</td><td class="n" style="color:var(--critical)">−30</td></tr>'+
         '<tr class="hi"><td><strong>Available this round</strong></td><td class="n"><strong>45</strong></td></tr>'+
-        '</tbody><caption>Round 1 disbursement was released in the proportions you locked at 08:20.</caption></table></div>'+
-        '<h2>Already spent, in your proportions</h2>'+
+        '</tbody><caption>The Round 1 money went out split the way you locked it.</caption></table></div>'+
+        '<h2>Already spent, split your way</h2>'+
         '<div class="tablewrap"><table class="data"><thead><tr><th>Country</th>'+
-        '<th>Round 1 share</th><th>Disbursed (USD m)</th></tr></thead><tbody>'+
+        '<th>Round 1 share</th><th>Sent (USD m)</th></tr></thead><tbody>'+
         CANDIDATES.map(c=>'<tr><td>'+c.name+'</td><td class="n">'+
           ((S.history[0]?S.history[0].alloc[c.id]:0))+'%</td><td class="n">'+
           (d[c.id]!=null?d[c.id].toFixed(2):"0.00")+'</td></tr>').join("")+
-        '</tbody><caption>Twenty-five million dollars, allocated on arithmetic density alone.</caption></table></div>'+
+        '</tbody><caption>Twenty-five million dollars, split using arithmetic density alone.</caption></table></div>'+
         '<div class="note"><strong>You cannot fund everyone now.</strong> Spreading $45M across five '+
-        'countries is not a recommendation, it is an avoidance of one. Rank them, fund the ranking, '+
-        'and be able to say what you gave up and why.</div>';
+        'countries is not a decision — it is dodging one. Put them in order, fund the order, and be '+
+        'ready to say what you gave up.</div>';
     }
   }
 };
@@ -1163,9 +1154,10 @@ function renderDoc(){
   const d=DOCS[S.openDoc];
   const w=document.getElementById("docwrap");
   const tag=d.tag?'<span class="stamp '+d.tag[0]+'">'+d.tag[1]+'</span>':"";
+  const keyline = d.key ? '<div class="keyline"><span class="lbl">Bottom line</span>'+d.key+'</div>' : "";
   w.innerHTML='<div class="docmeta"><div class="from"><span>FROM: '+d.from+
     '</span><span>TIME: '+d.time+'</span><span>CASE: 2.1-EGY</span>'+
-    (tag?'<span>'+tag+'</span>':'')+'</div><h1>'+d.title+'</h1></div>'+d.body()+
+    (tag?'<span>'+tag+'</span>':'')+'</div><h1>'+d.title+'</h1></div>'+keyline+d.body()+
     delibHTML();
   document.getElementById("docidx").textContent =
     (DOC_ORDER.filter(id=>availableDocs().includes(id)).indexOf(S.openDoc)+1)+
@@ -1217,8 +1209,8 @@ function renderBench(){
   document.getElementById("benchwhy").innerHTML = mixed
     ? kinds.map(k=>'<b>'+MEASURES[k].label+'</b> &mdash; '+MEASURES[k].formula).join("<br>")+
       '<br><span style="color:var(--ink-3)">'+MEASURES[kinds[kinds.length-1]].ex+'</span>'
-    : MEASURES[kinds[0]].formula+", to the nearest whole number. The round cannot be locked until "+
-      "every entry is verified.<br><span style=\"color:var(--ink-3)\">"+MEASURES[kinds[0]].ex+"</span>";
+    : MEASURES[kinds[0]].formula+". Round to a whole number.<br>"+
+      "<span style=\"color:var(--ink-3)\">"+MEASURES[kinds[0]].ex+"</span>";
   const rows=document.getElementById("benchrows"); rows.innerHTML="";
   spec.rows.forEach(r=>{
     const c=byId(r.id), M=MEASURES[r.m];
@@ -1256,9 +1248,9 @@ function checkBench(){
   });
   S.benchOk=allOk;
   const msg=document.getElementById("benchmsg");
-  msg.textContent = allOk ? "Verified and recorded on the case file."
-    : near ? "Close. Check which two figures you divided."
-    : anyTyped ? "Check your arithmetic — "+MEASURES[badKind||spec.rows[0].m].hint
+  msg.textContent = allOk ? "Checked. Recorded on your case file."
+    : near ? "Close. Check which two numbers you used."
+    : anyTyped ? "Not quite — "+MEASURES[badKind||spec.rows[0].m].hint
     : "";
   if(allOk && !availableDocs().includes("arable")){}
   renderRail(); updateGate();
@@ -1510,7 +1502,7 @@ function showAftermath(then){
     'displacement crisis currently recorded anywhere. Grain in a field nobody can safely reach is '+
     'not food. No density on this desk, and no yield figure either, can see that.</li>'+
     '<li><b>Niger farms at roughly a twentieth of Dutch yields.</b> Its low agricultural density '+
-    'never meant mechanisation. It meant a great deal of marginal land and very few people on it.</li>'+
+    'never meant mechanization. It meant a great deal of marginal land and very few people on it.</li>'+
     '<li><b>Your fund was cut by 40%. The real cut is worse.</b> In 2024 the UN and its partners '+
     'appealed for about $50 billion and received roughly 43% of it. Halfway through 2025, under 17% '+
     'of the year\'s appeal had come in. Being handed less money than the need is not a twist in this '+
@@ -1545,11 +1537,11 @@ function showMemo(){
     '<h2>Final allocation</h2>'+
     '<div class="tablewrap"><table class="data"><thead><tr><th>Country</th>'+
     '<th>Final (USD m)</th><th>Arithmetic</th><th>Physiological</th><th>Agricultural</th>'+
-    '<th>Yield</th></tr></thead><tbody>'+
+    '<th>kg / acre</th></tr></thead><tbody>'+
     CANDIDATES.slice().sort((a,b)=>final[b.id]-final[a.id]).map(c=>
       '<tr'+(final[c.id]>0?' class="hi"':'')+'><td>'+c.name+'</td><td class="n">'+final[c.id]+
       '</td><td class="n">'+fmt(c.arith)+'</td><td class="n">'+fmt(c.physio)+
-      '</td><td class="n">'+fmt(c.agri)+'</td><td class="n">'+c.yield.toFixed(1)+'</td></tr>').join("")+
+      '</td><td class="n">'+fmt(c.agri)+'</td><td class="n">'+fmt(c.kgAcre)+'</td></tr>').join("")+
     '</tbody></table></div>'+
     '<h2>How the recommendation moved</h2>'+
     '<div class="tablewrap"><table class="data"><thead><tr><th>Country</th>'+
@@ -1603,24 +1595,22 @@ function showOrient(firstRun){
     '<div class="orienthead"><span>'+logoSeal(104)+'</span><span>'+
     '<h1>Assignment</h1><div class="k">CASE 2.1-EGY · EMERGENCY CEREAL FUND · '+
     (S.solo?'DUTY ANALYST':'TWO-ANALYST DESK')+'</div></span></div>'+
-    '<p class="lead">Five countries have been referred to this desk for emergency cereal '+
-    'assistance. The fund holds <span class="num">$100 million</span>, and '+you+' will decide '+
-    'how it is divided.</p>'+
-    '<p>You will not be given all the evidence at once. It arrives in four rounds. After each '+
-    'round you commit an allocation and lock it — and then the next round changes what you know. '+
-    'Changing your mind is expected. The record of how your recommendation moved is part of what '+
-    'you submit at the end.</p>'+
+    '<p class="lead">Five countries need help buying food. The fund holds '+
+    '<span class="num">$100 million</span>, and '+you+' will decide how to split it.</p>'+
+    '<p>You will not get all the evidence at once. It comes in four rounds. After each round you '+
+    'split the money and lock it in. Then the next round changes what you know. Changing your mind '+
+    'is expected — how your answer moved is part of what you hand in.</p>'+
     '<ul class="rules">'+
-    '<li><b>Evidence arrives in the Case File</b>, on the left. A red dot means you have not read '+
-    'it yet. Documents marked <em>pending release</em> are sealed until a later round.</li>'+
-    '<li><b>You divide the fund in the Allocation panel</b>, on the right. The entire fund must be '+
-    'committed before a round can be locked — you cannot hold money back.</li>'+
-    '<li><b>Some documents stay sealed until you have done the arithmetic yourself.</b> When that '+
-    'happens, a Calculation Bench appears under the Case File and tells you what it needs.</li>'+
+    '<li><b>Evidence lands in the Case File</b>, on the left. A red dot means unread. Sealed items '+
+    'open in later rounds.</li>'+
+    '<li><b>You split the money in the Allocation panel</b>, on the right. All of it has to be '+
+    'committed before a round will lock.</li>'+
+    '<li><b>Some rounds make you do the math first.</b> A Calculation Bench appears under the Case '+
+    'File and tells you what it needs.</li>'+
     '</ul>'+
-    '<p style="margin-top:18px">'+Your+' recommendation is issued over '+
-    (S.solo?'your name':'both your names')+'. There is no score on this desk. What is assessed is '+
-    'whether the decision can be defended.</p>'+
+    '<p style="margin-top:18px">'+Your+' recommendation goes out over '+
+    (S.solo?'your name':'both your names')+'. There is no score here. What counts is whether you '+
+    'can defend the decision.</p>'+
     '<div class="memoactions"><button class="btn" id="orientGo">'+
     (firstRun?"Open Round 1":"Back to case file")+'</button>'+
     (firstRun?'<button class="btn ghost" id="orientSkip">Skip the walkthrough</button>':'')+
@@ -1741,6 +1731,21 @@ explained before students need it.</li>
 <p>Budget about three minutes for all of it. If you would rather brief the class yourself, have
 them click <em>Skip the walkthrough</em>.</p>
 
+<h2>Reading load and math load</h2>
+<p>Student-facing text runs about 1,085 words across all nine documents, and the path a pair
+actually has to read is closer to 950 — roughly six minutes of reading in a 35-minute period.
+Flesch-Kincaid averages grade 5.3, deliberately below the target so the technical vocabulary
+(<em>arithmetic</em>, <em>physiological</em>, <em>agricultural density</em>, <em>arable</em>) has
+room to sit on top without pushing the whole thing out of reach.</p>
+<p>Every document opens with a <strong>Bottom line</strong> strip: one sentence carrying the
+takeaway. A student who reads nothing else still gets the point of each document, which matters for
+struggling readers and for pairs running behind.</p>
+<p>On the math: every bench entry is <strong>one operation</strong>. Round 1 is a division students
+can almost do in their heads; Round 4 is one division and one multiplication. The hectare-to-acre
+conversion that used to sit in the food calculation is gone — yields are given in kilograms per acre
+so the step is simply <em>acres per person &times; kg per acre</em>. Tolerance is ±3% (±6% on the
+food step), so rounding never blocks a pair.</p>
+
 <h2>Pacing the reveal</h2>
 <p>The lab has to establish <em>why</em> density is on the desk without giving away what the later
 evidence says. Four things do that work:</p>
@@ -1786,8 +1791,8 @@ and re-lock without re-arguing. Do not compress Round 2.</p>
 job is teaching the bench interface while the stakes are low, so Round 2 is not a new tool and a
 new concept at once.</li>
 <li><strong>Round 2 — physiological</strong> (Egypt, Yemen, Niger). The pivot.</li>
-<li><strong>Round 4 — agricultural</strong> (Niger, Bangladesh). Deliberately the two countries
-that set up the trap: 85 against 431.</li>
+<li><strong>Round 4 — agricultural density</strong> (Niger) <strong>and cereal per person</strong>
+(Yemen). Two entries, one operation each.</li>
 </ul>
 <p>Round 3 has no bench — it is about interpretation, not calculation.</p>
 
@@ -1802,7 +1807,7 @@ its arable share drawn to scale inside. Egypt's block is tiny and exact.</li>
 density you pick. Egypt is one of the palest countries on arithmetic and the darkest on
 physiological. Worth putting on the projector during the debrief.</li>
 </ul>
-<p>Dot placement is a cartographic generalisation built from real city locations and settlement
+<p>Dot placement is a cartographic generalization built from real city locations and settlement
 corridors, not census tract data — the maps say so, and that is worth a sentence in class.</p>
 
 <h2>Outcomes — and what they deliberately are not</h2>
@@ -1842,7 +1847,7 @@ situations</strong>, because Egyptian yields are among the world's highest and Y
 hungry.</em></li>
 <li><strong>Round 4 — the agricultural density trap.</strong> Sorted by agricultural density, Sudan
 (~46) and Niger (~85) sit nearer the Netherlands (31) than Bangladesh (431). Students who learned
-"low agricultural density = mechanised and developed" will read this backwards. The yield column
+"low agricultural density = mechanized and developed" will read this backwards. The yield column
 resolves it: Netherlands 8.9 t/ha, Niger 0.5. Expect this to be the argument of the period.</li>
 </ul>
 
@@ -1867,8 +1872,10 @@ Sudan are the acute emergencies. A pair that funds Egypt heavily in Round 4 has 
 their memo will show it.</p>
 
 <h2>Data note — please read before class</h2>
-<p>Cereal yields are national averages (Egypt 6.5 t/ha, Bangladesh 4.7, Yemen 1.0, Sudan 0.6,
-Niger 0.5). Egypt's is genuinely among the world's highest — irrigated, double-cropped Nile valley —
+<p>Yields are shown to students as <strong>kilograms per acre</strong> (Egypt 2,630; Bangladesh
+1,862; Yemen 405; Sudan 243; Niger 202) so the food calculation is a single multiplication rather
+than a hectare-to-acre conversion. The underlying source figures are national cereal averages in
+tonnes per hectare (Egypt 6.5, Bangladesh 4.6, Yemen 1.0, Sudan 0.6, Niger 0.5). Egypt's is genuinely among the world's highest — irrigated, double-cropped Nile valley —
 and that fact is load-bearing for the whole Round 4 resolution, so it is worth stating aloud.
 The 150 kg/person/year line is the cereal component of a standard emergency ration, roughly 400 g a
 day, behind the 2,100 kcal/day humanitarian planning figure.</p>
@@ -1885,7 +1892,7 @@ against a current source before you run this, and tell students the numbers are 
 <p>There is no score and no win screen, deliberately. The subject is famine risk affecting real
 people, and the lab is built to read as sober analysis rather than a game. If a pair asks
 "did we get it right?", the honest answer is that real analysts disagree about this and the
-defence is what is being assessed — which is what the memo captures.</p>
+defense is what is being assessed — which is what the memo captures.</p>
 
 <h2>Assessment</h2>
 <p>The printed memo carries both names, all four allocations, the density figures, and four written

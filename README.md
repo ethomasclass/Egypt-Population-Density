@@ -62,6 +62,18 @@ figures they computed, and four written justifications — the gradeable artifac
 The sign-in screen offers **With a partner** (default) or **On my own**. Solo mode drops the second
 name field, reworks the prompts that assume someone to argue with, and prints a single signature line.
 
+## Reading and math load
+
+Student-facing prose runs ~1,085 words across all nine documents; the path a pair actually has to
+read is ~950, about six minutes in a 35-minute period. Flesch-Kincaid averages **grade 5.3**,
+deliberately below target so the technical vocabulary sits on top without pushing it out of reach.
+Every document opens with a **Bottom line** strip — one sentence carrying the takeaway, so a student
+who reads nothing else still gets the point.
+
+Every Calculation Bench entry is **one operation**. Yields are given in kilograms per acre, so the
+food step is just *acres per person × kg per acre* rather than a hectare-to-acre conversion.
+Tolerance is ±3% (±6% on the food step), so rounding never blocks a pair.
+
 ## Pacing the reveal
 
 Sealed documents show no titles — the case file lists them as `Sealed document · GFSU-2.1/07 ·
