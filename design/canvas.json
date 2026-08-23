@@ -1,0 +1,34 @@
+{
+ "artboards": [
+  {
+   "file": "Main.dc.html",
+   "x": 0,
+   "y": 0,
+   "w": 1280,
+   "h": 720,
+   "title": "The Lab \u2014 19 slides"
+  },
+  {
+   "file": "AdvisorCards.dc.html",
+   "x": 1400,
+   "y": 0,
+   "w": 816,
+   "h": 1056,
+   "title": "Advisor cards (print)",
+   "print": "fixed"
+  }
+ ],
+ "annotations": [
+  {
+   "id": "how-to-run",
+   "x": 0,
+   "y": -150,
+   "w": 420,
+   "text": "Students click through the lab on the left. Print the advisor cards on the right, cut them up, and give each student one role for the whole 35 minutes."
+  }
+ ],
+ "launch": {
+  "view": "focused",
+  "file": "Main.dc.html"
+ }
+}
