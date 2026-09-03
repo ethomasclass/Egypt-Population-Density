@@ -1,0 +1,536 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>You Lead Egypt</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Public+Sans:ital,wght@0,400;0,600;0,700;1,400&display=swap">
+<style>
+:root{
+  --ground:#F2EDE1; --paper:#FBF8F0; --ink:#23201B; --mut:#6E675B;
+  --nile:#0F5C63; --nile-d:#0A4148; --ochre:#B8842B; --terra:#A4442A;
+  --line:#DCD2BC; --line-d:#C2B69A;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0; background:#E7E0CE; color:var(--ink);
+  font-family:"Public Sans",-apple-system,"Segoe UI",Roboto,sans-serif;
+  font-size:17px; line-height:1.55; -webkit-font-smoothing:antialiased;
+  display:flex; align-items:center; justify-content:center; overflow:hidden;
+}
+h1,h2,h3{font-family:"Instrument Serif",Georgia,"Times New Roman",serif;font-weight:400;margin:0;
+  text-wrap:balance}
+p{margin:0 0 12px} b{font-weight:700}
+button{font-family:inherit}
+:focus-visible{outline:3px solid var(--ochre);outline-offset:2px}
+
+/* ── scale wrapper: 1280×720 fitted to any screen ─────── */
+#fit{width:1280px;height:720px;transform-origin:center center;flex:0 0 auto}
+.root{width:1280px;height:720px;display:flex;flex-direction:column;
+  background:var(--ground);overflow:hidden;box-shadow:0 4px 30px rgba(35,32,27,.22)}
+.stage{flex:1;min-height:0;position:relative}
+.sl{position:absolute;inset:0;padding:34px 52px 16px;overflow:hidden;display:none}
+.sl.on{display:block}
+.sl.cover{padding:0}
+.sl.decision{background:#F6F0E2;display:none;flex-direction:column}
+.sl.decision.on{display:flex}
+.sl.decision .opts{flex:1;min-height:0;align-items:stretch;padding-bottom:10px}
+.sl.decision .opt{justify-content:flex-start;padding:22px 22px 24px}
+.sl.decision .opt .d{margin-top:2px}
+.sl.reveal{background:#F7F3E9}
+
+/* ── shared type ───────────────────────────────────────── */
+.eyebrow{font-size:12px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--nile);margin-bottom:9px}
+.eyebrow.terra{color:var(--terra)}
+.eyebrow.ochre{color:var(--ochre)}
+h1.big{font-size:52px;line-height:1.04;letter-spacing:-.01em;margin-bottom:14px}
+h1.mid{font-size:40px;line-height:1.08;margin-bottom:12px}
+.lede{font-size:20px;line-height:1.5;color:var(--ink);margin-bottom:16px;max-width:56ch}
+.sub{color:var(--mut)}
+.era{display:flex;align-items:center;gap:12px;margin-bottom:14px;
+  border-bottom:1px solid var(--line-d);padding-bottom:9px}
+.era .yr{font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;
+  background:var(--nile);color:#F2EDE1;padding:4px 10px}
+.era .who{font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--mut)}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:34px}
+.cols.wide{grid-template-columns:1.25fr 1fr}
+.card{background:var(--paper);border:1px solid var(--line-d);padding:20px 22px}
+.card.t{border-top:4px solid var(--terra)}
+.card.n{border-top:4px solid var(--nile)}
+.card h3{font-size:13px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;
+  font-family:"Public Sans",sans-serif;color:var(--nile);margin-bottom:10px}
+.card.t h3{color:var(--terra)}
+.pull{border-left:4px solid var(--nile);padding:6px 0 6px 16px;margin:0 0 14px;
+  font-family:"Instrument Serif",Georgia,serif;font-size:23px;line-height:1.34}
+ul.tick{list-style:none;margin:0 0 12px;padding:0}
+ul.tick li{position:relative;padding-left:20px;margin-bottom:7px}
+ul.tick li::before{content:"";position:absolute;left:0;top:9px;width:8px;height:8px;
+  background:var(--ochre)}
+
+/* ── cover ─────────────────────────────────────────────── */
+.cover-wrap{height:100%;display:grid;grid-template-columns:1.08fr .92fr;background:var(--nile);color:#F4EFE3}
+.cover-l{padding:64px 46px 40px 56px;display:flex;flex-direction:column;justify-content:center}
+.cover-l .eyebrow{color:#9FC9CD}
+.cover-l h1{font-size:76px;line-height:.98;letter-spacing:-.015em;color:#F4EFE3;margin-bottom:20px}
+.cover-l p{font-size:19px;line-height:1.5;color:#CFE0E1;max-width:34ch;margin:0}
+.cover-r{background:var(--nile-d);display:flex;flex-direction:column;
+  align-items:center;justify-content:center;padding:34px 30px}
+.cover-r svg{width:236px;height:auto}
+.cover-r .cap{margin-top:16px;font-size:13px;line-height:1.5;color:#9FC9CD;text-align:center;max-width:30ch}
+
+/* ── tiles (slide 3) ───────────────────────────────────── */
+.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-top:6px}
+.tile{background:var(--paper);border:1px solid var(--line-d);padding:16px 16px 18px;
+  display:flex;flex-direction:column}
+.tile .n{font-family:"Instrument Serif",Georgia,serif;font-size:34px;color:var(--ochre);line-height:1;
+  margin-bottom:8px}
+.tile h3{font-size:17px;font-family:"Public Sans",sans-serif;font-weight:700;
+  letter-spacing:0;text-transform:none;color:var(--ink);margin-bottom:7px}
+.tile p{font-size:15px;line-height:1.5;color:var(--mut);margin:0}
+
+/* ── formula cards (slide 4) ───────────────────────────── */
+.three{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-bottom:18px}
+.three .c{background:var(--paper);border:1px solid var(--line-d);padding:18px 20px 20px}
+.three .c .n{font-family:"Instrument Serif",Georgia,serif;font-size:30px;color:var(--ochre);line-height:1}
+.three .c h3{font-size:19px;font-family:"Public Sans",sans-serif;font-weight:700;text-transform:none;
+  letter-spacing:0;color:var(--ink);margin:6px 0 9px}
+.chip{display:inline-block;font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  font-size:13px;background:#EDE5D2;border:1px solid var(--line-d);padding:5px 9px;margin-bottom:9px}
+.three .c p{font-size:15px;line-height:1.5;color:var(--mut);margin:0}
+.banner{background:var(--nile);color:#EAF1F1;padding:14px 20px;font-size:17px;line-height:1.5}
+.banner b{color:#fff}
+
+/* ── decisions ─────────────────────────────────────────── */
+.opts{display:grid;gap:13px;margin-top:4px}
+.opts.three-up{grid-template-columns:repeat(3,1fr)}
+.opts.two-up{grid-template-columns:repeat(2,1fr)}
+.opt{text-align:left;background:var(--paper);border:2px solid var(--line-d);
+  padding:17px 19px 19px;cursor:pointer;transition:border-color .12s,background .12s;
+  display:flex;flex-direction:column;min-height:0}
+.opt:hover{border-color:var(--terra);background:#FCF6EC}
+.opt .k{font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--terra);margin-bottom:7px}
+.opt .t{font-family:"Instrument Serif",Georgia,serif;font-size:23px;line-height:1.2;margin-bottom:9px}
+.opt .d{font-size:15px;line-height:1.5;color:var(--mut)}
+.opt[aria-pressed="true"]{border-color:var(--terra);background:#F6E7DC;
+  box-shadow:inset 0 0 0 1px var(--terra)}
+.opt[aria-pressed="true"] .k::after{content:"  ✓ CHOSEN";color:var(--terra)}
+.chosen-echo{display:inline-block;background:#EDE5D2;border-left:4px solid var(--terra);
+  padding:8px 14px;font-size:15px;margin-bottom:14px}
+.chosen-echo b{color:var(--terra)}
+
+/* ── dashboard ─────────────────────────────────────────── */
+.dash{background:var(--nile);color:#EAF1F1;padding:14px 22px;display:grid;
+  grid-template-columns:auto repeat(4,1fr);gap:20px;align-items:center;margin-top:14px}
+.dash .lbl{font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#9FC9CD}
+.dash .m .k{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+  color:#9FC9CD;margin-bottom:3px}
+.dash .m .v{font-family:"Instrument Serif",Georgia,serif;font-size:27px;line-height:1;color:#fff}
+.dash .m .u{font-size:11px;color:#9FC9CD;margin-top:3px}
+.dash .m.hot .v{color:#F0C070}
+
+/* ── simple bar figures ────────────────────────────────── */
+.bars{display:flex;flex-direction:column;gap:9px}
+.bar{display:grid;grid-template-columns:74px 1fr 58px;align-items:center;gap:11px}
+.bar .bl{font-size:14px;color:var(--mut)}
+.bar .bt{height:19px;background:#E4DAC2}
+.bar .bt i{display:block;height:100%;background:var(--nile)}
+.bar .bv{font-size:14px;font-variant-numeric:tabular-nums;color:var(--ink);text-align:right}
+.bar.big .bt{height:26px}
+.bar.big .bt i{background:var(--terra)}
+
+/* ── nav ───────────────────────────────────────────────── */
+.nav{flex:0 0 auto;height:58px;display:flex;align-items:center;gap:18px;
+  padding:0 24px;background:var(--nile);color:#F2EDE1}
+.nb{font-size:15px;font-weight:600;background:transparent;color:#F2EDE1;
+  border:1.5px solid rgba(242,237,225,.5);padding:9px 22px;cursor:pointer;min-height:42px}
+.nb:hover:not([disabled]){background:rgba(242,237,225,.14)}
+/* the primary button needs its own hover: the rule above is more specific
+   than .nb.next, so without this, hovering Next washes it out to look disabled */
+.nb.next:hover:not([disabled]){background:#fff;color:var(--nile-d)}
+.nb[disabled]{opacity:.3;cursor:not-allowed}
+.nb.next{background:#F2EDE1;color:var(--nile);border-color:#F2EDE1;font-weight:700}
+.nb.next[disabled]{background:rgba(242,237,225,.25);color:rgba(242,237,225,.6)}
+.prog{flex:1;height:5px;background:rgba(242,237,225,.22)}
+.prog i{display:block;height:100%;background:var(--ochre);transition:width .25s ease}
+.count{font-size:13px;font-variant-numeric:tabular-nums;color:#BFD6D8;min-width:56px;text-align:center}
+.hint{position:absolute;right:24px;bottom:66px;font-size:13px;color:var(--terra);font-weight:600}
+
+@media (prefers-reduced-motion:reduce){*{transition-duration:.01ms!important}}
+</style>
+</head>
+<body>
+<div id="fit"><div class="root">
+  <div class="stage" id="stage"></div>
+  <div class="nav">
+    <button class="nb" id="back">← Back</button>
+    <div class="prog"><i id="progbar"></i></div>
+    <div class="count" id="count">1 / 19</div>
+    <button class="nb next" id="next">Next →</button>
+  </div>
+</div></div>
+
+<script>
+const EGYPT_PATH="M96.0,90.6L6.3,90.6L6.3,29.3L4.0,22.5L5.9,17.2L4.8,13.6L7.5,9.5L17.6,9.4L35.9,15.5L44.8,10.3L51.5,9.7L56.8,10.7L58.9,14.9L60.7,12.2L72.6,14.6L76.3,12.5L81.3,27.1L75.5,41.3L73.7,42.7L67.8,36.2L62.4,24.1L61.6,24.9L64.8,33.8L75.1,55.5L87.1,74.3L85.6,75.8L85.9,81.3L96.0,90.6Z";
+const EGYPT_DOTS=[[53.6,23.7],[51.4,21.9],[52.9,21.3],[54.8,20.5],[53.6,24.7],[53.2,21.6],[55.4,24.1],[55.0,20.5],[54.0,24.3],[53.8,24.3],[51.6,22.9],[51.9,22.3],[54.0,24.6],[54.9,22.6],[54.9,21.9],[52.8,24.9],[53.2,22.6],[52.1,21.3],[52.0,22.8],[54.9,21.9],[52.2,22.7],[54.2,23.7],[52.3,22.5],[53.6,21.7],[53.9,23.8],[52.1,23.2],[53.9,24.8],[53.5,20.1],[51.1,22.4],[52.3,21.2],[54.7,21.8],[54.8,22.2],[52.8,23.0],[54.1,20.2],[51.7,23.3],[54.0,20.1],[53.3,21.7],[51.6,21.9],[52.7,23.1],[54.3,23.7],[55.0,22.5],[53.9,22.4],[44.8,13.7],[42.3,14.0],[43.3,13.2],[43.1,11.8],[45.0,11.7],[42.7,12.7],[44.1,13.6],[44.3,11.1],[43.9,12.8],[43.2,12.8],[55.1,14.4],[53.4,14.1],[51.7,17.1],[52.3,15.7],[56.0,17.8],[55.4,18.9],[61.8,13.1],[61.6,13.1],[63.8,23.4],[63.5,23.0],[53.8,46.9],[53.0,46.3],[52.5,46.1],[56.9,52.5],[55.7,51.6],[63.6,59.2],[63.6,59.1],[66.8,72.8],[56.0,49.4],[54.9,49.3],[50.8,38.8],[60.1,55.2],[56.7,51.7],[57.8,51.9],[63.3,59.3],[51.8,29.1],[60.9,56.7],[55.5,50.4],[62.2,56.4],[51.2,31.5],[64.7,62.0],[56.7,50.2],[52.5,24.1],[63.7,63.5],[64.6,65.4],[52.8,23.6],[52.5,45.9],[51.2,30.2],[55.1,49.1],[50.7,38.9],[58.5,53.4],[52.2,24.0],[54.2,47.4],[50.3,39.0],[57.2,51.5],[64.5,68.9],[65.7,71.9],[63.7,61.9],[59.6,53.4],[51.8,27.1],[50.8,33.5],[50.1,39.9],[62.1,58.5],[58.0,52.0],[52.6,26.8],[50.7,39.0],[52.1,44.2],[52.0,31.1],[49.4,38.5],[55.4,50.0],[56.7,50.6],[60.6,55.4],[56.9,11.8],[58.1,21.2],[54.1,18.6],[54.7,18.5],[52.5,11.4],[53.8,18.8],[52.2,16.8],[59.2,18.4],[48.7,14.4],[45.7,15.0],[59.2,15.9],[48.1,16.4],[52.4,19.9],[45.7,20.1],[48.5,17.1],[48.4,18.9],[45.1,15.5],[57.4,14.8],[53.0,14.4],[47.0,13.7],[51.2,15.5],[53.7,16.4],[48.7,18.9],[47.3,15.9],[49.9,15.1],[43.9,17.7],[57.7,18.9],[52.7,16.1],[48.3,10.7],[48.5,13.1],[46.3,20.8],[57.9,16.7],[44.7,17.3],[50.9,13.5],[45.5,19.1],[46.2,17.8],[49.4,14.1],[53.7,12.2],[57.1,15.9],[55.7,13.4],[56.1,16.3],[56.5,13.8],[58.6,20.2],[57.9,21.5],[56.1,15.1],[51.8,11.0],[53.0,17.0],[56.4,11.9],[53.6,17.4],[51.1,16.5],[55.5,18.3],[50.1,15.4],[50.0,18.0],[56.5,12.2],[51.8,16.7],[46.7,18.2],[17.3,43.9],[57.5,83.5]];
+</script>
+<script>
+"use strict";
+
+/* ── the dot map: 1 dot = 500,000 people ───────────────── */
+function egyptMap(){
+  return '<svg viewBox="0 0 100 100" role="img" aria-label="Map of Egypt. Nearly every dot sits along the Nile river and its delta; the desert either side is empty.">'+
+    '<path d="'+EGYPT_PATH+'" fill="#0F5C63" stroke="#5E9AA0" stroke-width=".8"/>'+
+    '<g fill="#F0C070">'+EGYPT_DOTS.map(function(p){
+      return '<circle cx="'+p[0]+'" cy="'+p[1]+'" r="1.15"/>';}).join("")+'</g></svg>';
+}
+
+/* ── density dashboard ─────────────────────────────────── */
+function dash(year,pop,farm,arith,physio,hot){
+  return '<div class="dash"><span class="lbl">Egypt<br>'+year+'</span>'+
+    '<div class="m"><div class="k">People</div><div class="v">'+pop+'</div><div class="u">million</div></div>'+
+    '<div class="m"><div class="k">Farmland</div><div class="v">'+farm+'</div><div class="u">square miles</div></div>'+
+    '<div class="m"><div class="k">Arithmetic density</div><div class="v">'+arith+'</div><div class="u">people / sq mi</div></div>'+
+    '<div class="m'+(hot?' hot':'')+'"><div class="k">Physiological density</div><div class="v">'+physio+
+      '</div><div class="u">people / sq mi of farmland</div></div></div>';
+}
+function bars(rows,big){
+  var max=Math.max.apply(null,rows.map(function(r){return r[1];}));
+  return '<div class="bars">'+rows.map(function(r){
+    return '<div class="bar'+(big?' big':'')+'"><span class="bl">'+r[0]+'</span>'+
+      '<span class="bt"><i style="width:'+(r[1]/max*100).toFixed(1)+'%"></i></span>'+
+      '<span class="bv">'+r[2]+'</span></div>';}).join("")+'</div>';
+}
+
+/* ── decisions ─────────────────────────────────────────── */
+var CHOICES={};
+function opts(id,list,cls){
+  return '<div class="opts '+(cls||'three-up')+'" data-dec="'+id+'">'+list.map(function(o,i){
+    return '<button class="opt" aria-pressed="false" data-i="'+i+'" data-label="'+o[1]+'">'+
+      '<span class="k">Option '+o[0]+'</span><span class="t">'+o[1]+'</span>'+
+      '<span class="d">'+o[2]+'</span></button>';}).join("")+'</div>';
+}
+function echo(id){
+  var c=CHOICES[id];
+  return '<div class="chosen-echo">You chose: <b>'+(c?c:'—')+'</b></div>';
+}
+
+/* ── the 19 slides ─────────────────────────────────────── */
+var SLIDES=[
+
+/* 1 */ {cls:"cover", html:
+  '<div class="cover-wrap"><div class="cover-l">'+
+  '<div class="eyebrow">A 35-minute decision lab</div>'+
+  '<h1>You Lead<br>Egypt</h1>'+
+  '<p>Four real presidents. Four real choices. One country where almost everybody lives on the same thin strip of land.</p>'+
+  '</div><div class="cover-r">'+egyptMap()+
+  '<div class="cap">Every dot is 500,000 people.<br>Every choice in this lab actually happened.</div>'+
+  '</div></div>'},
+
+/* 2 */ {html:
+  '<div class="eyebrow">First, where are we?</div>'+
+  '<h1 class="mid">A country that is almost entirely desert</h1>'+
+  '<div class="cols wide" style="margin-top:16px">'+
+  '<div><p class="lede">Egypt is a country in the northeast corner of Africa, on the Mediterranean Sea. About <b>116 million</b> people live there — roughly a third as many as the United States.</p>'+
+  '<p>It is also almost entirely desert. Sand, rock, and almost no rain.</p>'+
+  '<div class="pull">Only about 3 out of every 100 acres of Egypt can grow food.</div>'+
+  '<p>So why does anyone live there at all? Because of one river.</p></div>'+
+  '<div class="card n"><h3>The Nile</h3>'+
+  '<p>The Nile is the longest river in Africa. It flows <b>south to north</b> and empties into the Mediterranean Sea.</p>'+
+  '<p>Everywhere the Nile touches, the land is green and farmable. Everywhere it does not, the land is desert.</p>'+
+  '<p style="margin:0">That is why the map on the last slide looked like a green ribbon with a fan at the top. People live on the river, because there is nowhere else to live.</p>'+
+  '</div></div>'},
+
+/* 3 */ {html:
+  '<div class="eyebrow">Meet Egypt today</div>'+
+  '<h1 class="mid">Before you decide anything, meet the people</h1>'+
+  '<p class="lede" style="margin-bottom:18px">You are about to make choices for this country. You should know who actually lives there.</p>'+
+  '<div class="tiles">'+
+  '<div class="tile"><div class="n">1</div><h3>Home is crowded — and full of family</h3>'+
+  '<p>In Cairo, Egypt\'s capital, it is normal for grandparents, parents and children to share one apartment. Around 20 million people live in and around the city.</p></div>'+
+  '<div class="tile"><div class="n">2</div><h3>Koshari</h3>'+
+  '<p>Egypt\'s most popular everyday meal: rice, lentils, pasta, chickpeas, fried onions and tomato sauce in one bowl. Cheap, filling, sold on street corners everywhere.</p></div>'+
+  '<div class="tile"><div class="n">3</div><h3>Farming families</h3>'+
+  '<p>In the Nile Delta, families farm small plots passed down for generations. Some are smaller than a soccer field. Egyptian farmers are called <i>fellahin</i>.</p></div>'+
+  '<div class="tile"><div class="n">4</div><h3>Mohamed Salah</h3>'+
+  '<p>One of the most famous soccer players in the world is Egyptian. He grew up in a small Delta village called Nagrig.</p></div>'+
+  '</div>'},
+
+/* 4 */ {html:
+  '<div class="eyebrow">Your tools</div>'+
+  '<h1 class="mid">Three ways to measure crowding</h1>'+
+  '<p class="lede" style="margin-bottom:16px">Geographers measure crowding three different ways. Each answers a different question — and they often disagree.</p>'+
+  '<div class="three">'+
+  '<div class="c"><div class="n">1</div><h3>Arithmetic density</h3>'+
+  '<div class="chip">all people ÷ all land</div>'+
+  '<p>How crowded a country is overall. Simple — but it counts empty desert as if people could live there.</p></div>'+
+  '<div class="c"><div class="n">2</div><h3>Physiological density</h3>'+
+  '<div class="chip">all people ÷ farmland</div>'+
+  '<p>How many people depend on each piece of land that can actually grow food. For a desert country, this is the number that matters.</p></div>'+
+  '<div class="c"><div class="n">3</div><h3>Agricultural density</h3>'+
+  '<div class="chip">farmers ÷ farmland</div>'+
+  '<p>How many farmers work each piece of farmland. It tells you <i>how</i> a country farms — by hand, or with machines.</p></div>'+
+  '</div>'+
+  '<div class="banner">Watch what happens: every decision you make will move these three numbers <b>differently</b>. Sometimes one goes up while another does not move at all.</div>'},
+
+/* 5 */ {html:
+  '<div class="era"><span class="yr">1952 – 1970</span><span class="who">President Gamal Abdel Nasser</span></div>'+
+  '<h1 class="mid">Your problem: the river floods, and then it doesn\'t</h1>'+
+  '<div class="cols wide" style="margin-top:14px">'+
+  '<div><p>You have just taken power after a revolution removed Egypt\'s king. You are 34 years old.</p>'+
+  '<p>Every year the Nile floods. Some years it floods too much and destroys villages. Some years it barely floods at all and crops fail. Farmers can only grow one crop a year, when the water comes.</p>'+
+  '<p>Engineers tell you there is a solution: build an enormous dam at <b>Aswan</b>, in the south. A dam would hold the flood water back in a huge lake and release it all year round.</p>'+
+  '<ul class="tick"><li>More farmland, watered year-round</li>'+
+  '<li>Two or three crops a year instead of one</li><li>Electricity for the whole country</li></ul></div>'+
+  '<div class="card t"><h3>The catch</h3>'+
+  '<p>The dam costs more money than Egypt has.</p>'+
+  '<p>The United States and the <b>World Bank</b> — a group of countries that lends money for big projects — offered to pay for it.</p>'+
+  '<p>Then, in July 1956, they took the offer back. They were angry that you had bought weapons from the Soviet Union\'s side.</p>'+
+  '<p style="margin:0;font-size:15px;color:var(--mut)"><b>This is the Cold War.</b> The United States and the Soviet Union are enemies, and both want countries like Egypt on their side.</p>'+
+  '</div></div>'},
+
+/* 6 */ {html:
+  '<div class="eyebrow">Why this river is different</div>'+
+  '<h1 class="mid">People have farmed this exact strip for 5,000 years</h1>'+
+  '<div class="cols" style="margin-top:16px">'+
+  '<div><p>The ancient Egyptians who built the pyramids farmed the Nile\'s banks the same way: wait for the flood, plant in the fresh mud it leaves behind, harvest before the next one comes.</p>'+
+  '<div class="pull">A Greek writer named Herodotus visited about 2,500 years ago and called Egypt “the gift of the Nile” — meaning the country only exists because the river does.</div>'+
+  '<p style="margin:0">So when you decide whether to dam the Nile, you are changing something that has worked the same way since before the pyramids were built.</p></div>'+
+  '<div class="card"><h3>The flood, before the dam</h3>'+
+  bars([["June",12,"12%"],["August",86,"86%"],["October",58,"58%"],["January",20,"20%"],["April",9,"9%"]])+
+  '<p style="font-size:14px;color:var(--mut);margin:12px 0 0">Water in the river across one year. Farmers got one soaking, then months of very little. A dam would flatten this line out.</p>'+
+  '</div></div>'},
+
+/* 7 */ {cls:"decision", dec:"d1", html:
+  '<div class="eyebrow terra">Decision 1 of 4</div>'+
+  '<h1 class="mid">How will you pay for the dam?</h1>'+
+  '<p class="lede" style="margin-bottom:16px">Talk it through with your partner. Read <b>both</b> advisor cards before you choose.</p>'+
+  opts("d1",[
+    ["A","Take the Soviet Union's money","They have offered to pay and send engineers. Egypt gets its dam — but is now tied to one side of the Cold War."],
+    ["B","Take control of the Suez Canal","The canal runs through Egypt but Britain and France run it and collect the fees. Seize it and Egypt collects that money instead. They will not accept this quietly."],
+    ["C","Give up on the dam","Do not risk a war or a foreign alliance. Egypt keeps farming the way it has for 5,000 years."]])},
+
+/* 8 */ {cls:"reveal", html:
+  '<div class="eyebrow">What actually happened</div>'+
+  '<h1 class="mid">Nasser did both A and B</h1>'+
+  '<div id="echo-d1"></div>'+
+  '<div class="cols wide">'+
+  '<div><p>One week after the United States pulled out, Nasser <b>seized the Suez Canal</b>. Britain, France and Israel responded by invading Egypt — the <b>Suez Crisis</b>.</p>'+
+  '<p>Both the United States and the Soviet Union pressured the invaders to leave, and they did. Nasser became a hero across the Arab world for standing up to them.</p>'+
+  '<p>Then he accepted Soviet money and Soviet engineers. The <b>Aswan High Dam</b> was finished in 1970.</p></div>'+
+  '<div class="card n"><h3>What the dam did</h3>'+
+  '<ul class="tick"><li>Floods controlled for the first time in history</li>'+
+  '<li>Farmland watered all year</li><li>Two or three harvests a year instead of one</li>'+
+  '<li>Electricity for cities and villages</li><li>Egypt\'s farmland grew by roughly a third</li></ul>'+
+  '<p style="font-size:15px;color:var(--mut);margin:0">It also trapped the rich mud the flood used to spread on the fields. Farmers had to start buying fertilizer instead.</p>'+
+  '</div></div>'+
+  dash("1970","34.5","13,100","89","2,629",true)+
+  '<p style="font-size:15px;color:var(--mut);margin:10px 0 0">In 1950 physiological density was about <b>1,950</b>. Egypt added farmland — and added people faster. Even <i>with</i> the dam, it went up.</p>'},
+
+/* 9 */ {cls:"decision", dec:"d2", html:
+  '<div class="eyebrow terra">Decision 2 of 4</div>'+
+  '<h1 class="mid">Who gets to farm the land?</h1>'+
+  '<div class="cols wide" style="margin-bottom:14px"><div>'+
+  '<p>Before your revolution, a small number of extremely rich families owned most of Egypt\'s farmland. Most Egyptians who farmed did not own the land they worked — they rented it and handed over much of what they grew.</p></div>'+
+  '<div class="pull" style="margin:0">This choice does not change how much farmland Egypt has. It changes how many farmers work it — which is <b>agricultural density</b>.</div>'+
+  '</div>'+
+  opts("d2",[
+    ["A","Break up the big estates","Set a legal limit on how much land one family can own. Take the rest and hand it to thousands of small farming families in little plots."],
+    ["B","Leave the big farms alone","Large farms can buy machines and grow more per acre. Breaking them up might mean less food, not more."]],"two-up")},
+
+/* 10 */ {cls:"reveal", html:
+  '<div class="eyebrow">What actually happened</div>'+
+  '<h1 class="mid">Nasser broke up the estates</h1>'+
+  '<div id="echo-d2"></div>'+
+  '<div class="cols wide">'+
+  '<div><p>Starting in 1952, a new law said no one family could own more than about <b>200 feddans</b> — a feddan is a little bigger than an acre. Later the limit was tightened further.</p>'+
+  '<p>Land taken from around <b>1,700 wealthy landowners</b>, including members of the royal family, was handed out in small plots to farming families. By 1970 about 15% of Egypt\'s farmland had changed hands.</p>'+
+  '<p>Thousands of families owned land for the first time. But each plot was small — and every time a farmer died, the plot was split again among his children.</p></div>'+
+  '<div class="card n"><h3>What this did to the third number</h3>'+
+  '<div class="chip">farmers ÷ farmland</div>'+
+  '<p>Egypt\'s farmland stayed the same size. The number of people farming it went <b>up</b>.</p>'+
+  '<p>So <b>agricultural density rose</b> — lots of farmers, each working a very small piece of land, mostly by hand.</p>'+
+  '<p style="margin:0">A country with a <i>low</i> agricultural density, like the Netherlands, has few farmers with big machines. Egypt went the other direction.</p>'+
+  '</div></div>'},
+
+/* 11 */ {html:
+  '<div class="era"><span class="yr">1970 – 1981</span><span class="who">President Anwar Sadat</span></div>'+
+  '<h1 class="mid">Fast forward</h1>'+
+  '<div class="cols wide" style="margin-top:14px">'+
+  '<div><p>Nasser died in 1970. The next president, Anwar Sadat, spent his years in office on something this lab is not about: Egypt made peace with its neighbour Israel after decades of conflict, and Sadat was killed in 1981 by Egyptians who opposed that peace.</p>'+
+  '<p>That is an enormous story, and it deserves its own lesson rather than a footnote in this one.</p>'+
+  '<div class="pull" style="margin:0">What matters here is what he left behind: Egypt\'s population kept climbing, and its farmland did not.</div></div>'+
+  '<div class="card"><h3>Egypt\'s population</h3>'+
+  bars([["1950",21,"21 million"],["1970",35,"35 million"],["1981",44,"44 million"]],true)+
+  '</div></div>'},
+
+/* 12 */ {html:
+  '<div class="era"><span class="yr">1981 – 2011</span><span class="who">President Hosni Mubarak</span></div>'+
+  '<h1 class="mid">Your problem: bread</h1>'+
+  '<div class="cols wide" style="margin-top:14px">'+
+  '<div><p>Egypt cannot grow enough wheat to feed itself, and has not been able to for a long time. So Egypt buys wheat from other countries — <b>more of it than any other country on Earth</b>.</p>'+
+  '<p>To keep bread cheap for poor families, the government pays part of the cost itself. This is called a <b>subsidy</b>. A loaf that costs the government more is sold to Egyptians for a few cents.</p>'+
+  '<p>Bread subsidies are enormously expensive. They are also the reason millions of families can eat.</p>'+
+  '<div class="pull" style="margin:0">You have 68 million people now — three times what Nasser had.</div></div>'+
+  '<div class="card t"><h3>A second idea on your desk</h3>'+
+  '<p>Engineers propose pumping water from Lake Nasser — the lake behind the Aswan dam — out into the empty Western Desert, to create brand new farmland from nothing.</p>'+
+  '<p>It is called the <b>Toshka Project</b>. The plan is to reclaim about a million acres of desert and move a big share of Egypt\'s population out there.</p>'+
+  '<p style="margin:0">It would be the largest and most expensive engineering project in the Arab world.</p>'+
+  '</div></div>'},
+
+/* 13 */ {html:
+  '<div class="eyebrow">The word for bread</div>'+
+  '<h1 class="mid">In Egypt, bread is called life</h1>'+
+  '<div class="cols" style="margin-top:16px">'+
+  '<div><p>The flatbread Egyptians eat every day is called <b>aish baladi</b>.</p>'+
+  '<p><i>Baladi</i> means “of the country” — local, homegrown, ordinary.</p>'+
+  '<p>And <i>aish</i>, the word for bread itself, comes from the Arabic root that means <b>life</b>.</p>'+
+  '<p>In most of the Arab world the word for bread is <i>khubz</i>. In Egypt, bread is called life.</p>'+
+  '<div class="pull" style="margin:14px 0 0">Keep that in mind while you decide what to do about the price of it.</div></div>'+
+  '<div class="card" style="display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center">'+
+  '<div style="font-family:\'Instrument Serif\',Georgia,serif;font-size:58px;line-height:1.2;margin-bottom:12px">عيش بلدي</div>'+
+  '<div style="font-size:20px;font-weight:600;margin-bottom:6px">aish baladi</div>'+
+  '<div style="font-size:16px;color:var(--mut)">“bread of the country”</div>'+
+  '<div style="font-size:16px;color:var(--terra);font-weight:600;margin-top:10px">literally: life of the country</div>'+
+  '</div></div>'},
+
+/* 14 */ {cls:"decision", dec:"d3", html:
+  '<div class="eyebrow terra">Decision 3 of 4</div>'+
+  '<h1 class="mid">Bread is eating your budget. What do you do?</h1>'+
+  '<p class="lede" style="margin-bottom:16px">Read both advisor cards. There is no safe option here.</p>'+
+  opts("d3",[
+    ["A","Keep bread cheap, whatever it costs","Keep paying the subsidy. Families can eat. The government goes deeper into debt every year."],
+    ["B","Raise the price of bread","Stop spending money Egypt does not have. Poor families will pay more for the food they depend on most."],
+    ["C","Build Toshka and grow your own wheat","Spend the money making new farmland in the desert instead of on cheap bread. If it works, Egypt stops buying wheat from anyone."]])},
+
+/* 15 */ {cls:"reveal", html:
+  '<div class="eyebrow">What actually happened</div>'+
+  '<h1 class="mid">Mubarak did A and C. Both went badly.</h1>'+
+  '<div id="echo-d3"></div>'+
+  '<div class="cols wide">'+
+  '<div><p><b>Toshka began in 1997.</b> It never came close to its goal. The desert soil turned out to be full of salt, the machines bogged down in clay, and very few people wanted to move there. After billions of dollars, only a small fraction of the promised farmland exists.</p>'+
+  '<p>The subsidies stayed. Then in 2008 wheat prices spiked worldwide. Bread prices in Egypt rose about <b>37%</b>. There were fights in bread lines and people died.</p>'+
+  '<p>In 2011, huge protests removed Mubarak from power after 30 years. Their chant was <b>“bread, freedom, social justice”</b> — and bread came first.</p></div>'+
+  '<div class="card t"><h3>The lesson in Toshka</h3>'+
+  '<p>“Make more farmland” sounds like the obvious fix for a high physiological density.</p>'+
+  '<p>But desert is desert for a reason. Water has to be pumped uphill for miles, the soil is salty, and people do not want to leave the river.</p>'+
+  '<p style="margin:0">Egypt\'s farmland today is <b>roughly the same size as before the Aswan dam</b> — new desert farms gained, Delta farmland lost to spreading cities.</p>'+
+  '</div></div>'+
+  dash("2000","68.8","12,700","178","5,402",true)},
+
+/* 16 */ {html:
+  '<div class="era"><span class="yr">2014 – now</span><span class="who">President Abdel Fattah el-Sisi</span></div>'+
+  '<h1 class="mid">Your problem: everyone, and not enough room</h1>'+
+  '<div class="cols wide" style="margin-top:14px">'+
+  '<div><p>Egypt now has about <b>116 million</b> people. That is more than five times what Nasser governed — on the same amount of farmland.</p>'+
+  '<p>Cairo is jammed. Around 20 million people live in and around it, and the city keeps spreading outward, onto the Delta farmland that feeds the country.</p>'+
+  '<div class="pull" style="margin:0">Every acre Cairo grows is an acre that stops growing food.</div></div>'+
+  '<div class="card t"><h3>And something upstream</h3>'+
+  '<p>Ethiopia, a country further up the Nile, has built an enormous dam of its own: the <b>Grand Ethiopian Renaissance Dam</b>, finished in 2024.</p>'+
+  '<p>Ethiopia says it needs the electricity, and that the river runs through its country too.</p>'+
+  '<p>Egypt says that whoever controls the water upstream controls whether Egypt eats.</p>'+
+  '<p style="margin:0">The two countries have argued about it for more than ten years without agreeing.</p>'+
+  '</div></div>'},
+
+/* 17 */ {cls:"decision", dec:"d4", html:
+  '<div class="eyebrow terra">Decision 4 of 4</div>'+
+  '<h1 class="mid">Where do the next ten million people go?</h1>'+
+  '<p class="lede" style="margin-bottom:16px">This is the one still being decided in real life. There is no answer key.</p>'+
+  opts("d4",[
+    ["A","Build a new city in the desert","Construct an entirely new capital east of Cairo, on land that grows nothing anyway. Move the government there and let people follow."],
+    ["B","Build upward in Cairo","Keep everyone where they already are and build taller. Cheaper — but Cairo is already one of the most crowded cities on Earth."],
+    ["C","Protect the Delta farmland by law","Make it illegal to build on farmland. Saves the fields, but does not give the extra millions of people anywhere to live."]])},
+
+/* 18 */ {cls:"reveal", html:
+  '<div class="eyebrow ochre">This one has no answer yet</div>'+
+  '<h1 class="mid">Sisi chose A. Nobody knows if it worked.</h1>'+
+  '<div id="echo-d4"></div>'+
+  '<div class="cols wide">'+
+  '<div><p>Construction on a <b>New Administrative Capital</b> began in 2016 in the desert east of Cairo. The government began moving into it in 2022, and the president opened it officially in December 2024.</p>'+
+  '<p>It is designed to eventually hold about <b>6.5 million</b> people.</p>'+
+  '<p>Whether Egyptians actually move there — and whether it takes real pressure off Cairo and the Delta — is still being decided right now, while you sit in this classroom.</p></div>'+
+  '<div class="card n"><h3>Notice something</h3>'+
+  '<p>Moving people to a new city does <b>not change Egypt\'s arithmetic density at all</b>. The same number of people, the same country.</p>'+
+  '<p style="margin:0">Only <i>where</i> they are changes. That is <b>distribution</b>, not density.</p>'+
+  '</div></div>'+
+  dash("Today","116.5","10,800","301","10,780",true)},
+
+/* 19 */ {html:
+  '<div class="eyebrow">Seventy years, four presidents, one strip of land</div>'+
+  '<h1 class="mid">Every president tried. The line still went up.</h1>'+
+  '<div class="cols" style="margin-top:14px">'+
+  '<div class="card"><h3>Physiological density — people per square mile of farmland</h3>'+
+  bars([["1950",1950,"1,950"],["1970",2629,"2,629"],["2000",5402,"5,402"],["Today",10780,"10,780"]],true)+
+  '<ul class="tick" style="margin-top:14px;font-size:15px">'+
+  '<li>Nasser built a dam and made more farmland</li>'+
+  '<li>Nasser gave land to thousands of small farmers</li>'+
+  '<li>Mubarak tried to farm the open desert</li>'+
+  '<li>Mubarak paid to keep bread cheap</li>'+
+  '<li>Sisi is building a city on land nobody farms</li></ul></div>'+
+  '<div class="card n"><h3>Talk about it</h3>'+
+  '<p><b>1.</b> Egypt\'s arithmetic density is about <b>301</b>. Its physiological density is about <b>10,780</b>. Which number tells you more about life in Egypt, and why?</p>'+
+  '<p><b>2.</b> The Aswan dam gave Egypt more farmland. Physiological density went <b>up</b> anyway. How is that possible?</p>'+
+  '<p style="margin:0"><b>3.</b> Moving people to a new desert city changes distribution but not density. Explain the difference to someone who missed today.</p>'+
+  '</div></div>'}
+];
+
+/* ── engine ────────────────────────────────────────────── */
+var i=0, stage=document.getElementById("stage"),
+    back=document.getElementById("back"), next=document.getElementById("next"),
+    count=document.getElementById("count"), progbar=document.getElementById("progbar");
+
+function render(){
+  var s=SLIDES[i];
+  stage.innerHTML='<div class="sl on '+(s.cls||"")+'">'+s.html+'</div>'+
+    (s.dec && !CHOICES[s.dec] ? '<div class="hint">Pick an option to continue →</div>' : '');
+  ["d1","d2","d3","d4"].forEach(function(k){
+    var el=document.getElementById("echo-"+k);
+    if(el) el.innerHTML=echo(k);
+  });
+  var box=stage.querySelector(".opts");
+  if(box){
+    var id=box.dataset.dec;
+    box.querySelectorAll(".opt").forEach(function(b){
+      if(CHOICES[id]===b.dataset.label) b.setAttribute("aria-pressed","true");
+      b.addEventListener("click",function(){
+        box.querySelectorAll(".opt").forEach(function(o){o.setAttribute("aria-pressed","false");});
+        b.setAttribute("aria-pressed","true");
+        CHOICES[id]=b.dataset.label;
+        var h=stage.querySelector(".hint"); if(h) h.remove();
+        gate();
+      });
+    });
+  }
+  count.textContent=(i+1)+" / "+SLIDES.length;
+  progbar.style.width=((i+1)/SLIDES.length*100)+"%";
+  back.disabled = i===0;
+  gate();
+}
+function gate(){
+  var s=SLIDES[i];
+  var blocked = !!(s.dec && !CHOICES[s.dec]);
+  next.disabled = blocked || i===SLIDES.length-1;
+  next.textContent = i===SLIDES.length-1 ? "End" : (blocked ? "Choose first" : "Next →");
+}
+next.addEventListener("click",function(){ if(i<SLIDES.length-1){i++;render();} });
+back.addEventListener("click",function(){ if(i>0){i--;render();} });
+document.addEventListener("keydown",function(e){
+  if(e.key==="ArrowRight"&&!next.disabled) next.click();
+  if(e.key==="ArrowLeft"&&!back.disabled) back.click();
+});
+
+/* fit 1280×720 to whatever screen this is on */
+function fit(){
+  var f=document.getElementById("fit");
+  var s=Math.min(window.innerWidth/1280, window.innerHeight/720);
+  f.style.transform="scale("+s+")";
+}
+window.addEventListener("resize",fit);
+fit(); render();
+</script>
+</body>
+</html>
